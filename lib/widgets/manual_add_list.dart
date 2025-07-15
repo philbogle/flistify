@@ -1,7 +1,4 @@
-
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class ManualAddList extends StatefulWidget {
   const ManualAddList({super.key});
@@ -13,34 +10,16 @@ class ManualAddList extends StatefulWidget {
 class _ManualAddListState extends State<ManualAddList> {
   final TextEditingController _controller = TextEditingController();
 
-  void _addList() async {
-    if (_controller.text.isEmpty) return;
-
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    // Hide the keyboard
-    FocusScope.of(context).unfocus();
-
-    // Add the new list to Firestore
-    await FirebaseFirestore.instance.collection('tasks').add({
-      'title': _controller.text,
-      'subtasks': [],
-      'createdAt': Timestamp.now(),
-      'userId': user.uid,
-      'completed': false,
-    });
-
-    // Close the bottom sheet
-    if (mounted) {
-      Navigator.of(context).pop();
+  void _submit() {
+    if (_controller.text.isNotEmpty) {
+      Navigator.of(context).pop(_controller.text);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(16.0),
       child: Row(
         children: [
           Expanded(
@@ -51,11 +30,12 @@ class _ManualAddListState extends State<ManualAddList> {
                 hintText: 'New list',
                 filled: true,
               ),
+              onSubmitted: (_) => _submit(),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: _addList,
+            onPressed: _submit,
           ),
         ],
       ),

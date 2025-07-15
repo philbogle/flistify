@@ -10,6 +10,7 @@ import 'widgets/speak_list_dialog.dart';
 import 'widgets/scan_list_dialog.dart';
 import 'widgets/app_drawer.dart';
 import 'widgets/list_card.dart';
+import 'widgets/list_detail_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -104,6 +105,15 @@ class _ListPageState extends State<ListPage> {
   bool _isCompletedExpanded = false;
   bool _isScanning = false;
 
+  void _handleListCompleted(ListModel list, bool? completed) {
+    if (completed == null) return;
+
+    FirebaseFirestore.instance
+        .collection('tasks')
+        .doc(list.id)
+        .update({'completed': completed});
+  }
+
   @override
   void initState() {
     super.initState();
@@ -183,8 +193,8 @@ class _ListPageState extends State<ListPage> {
     }
   }
 
-  void _showManualAddSheet() {
-    showModalBottomSheet(
+  void _showManualAddSheet() async {
+    final newTitle = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       builder: (context) {
@@ -196,6 +206,28 @@ class _ListPageState extends State<ListPage> {
         );
       },
     );
+
+    if (newTitle != null && newTitle.isNotEmpty) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final newListRef = await FirebaseFirestore.instance.collection('tasks').add({
+        'title': newTitle,
+        'subtasks': [],
+        'createdAt': Timestamp.now(),
+        'userId': user.uid,
+        'completed': false,
+      });
+
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ListDetailScreen(listId: newListRef.id),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -231,7 +263,7 @@ class _ListPageState extends State<ListPage> {
 
               return ListView(
                 children: [
-                  ...activeLists.map((list) => ListCard(list: list)),
+                  ...activeLists.map((list) => ListCard(key: ValueKey(list.id), list: list, onCompleted: (value) => _handleListCompleted(list, value))),
                   if (completedLists.isNotEmpty)
                     ExpansionTile(
                       title: const Text('Completed', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
@@ -241,7 +273,7 @@ class _ListPageState extends State<ListPage> {
                           _isCompletedExpanded = expanded;
                         });
                       },
-                      children: completedLists.map((list) => ListCard(key: ValueKey(list.id), list: list)).toList(),
+                      children: completedLists.map((list) => ListCard(key: ValueKey(list.id), list: list, onCompleted: (value) => _handleListCompleted(list, value))).toList(),
                     ),
                   const SizedBox(height: 80), // Padding for FABs
                 ],
@@ -281,19 +313,6 @@ class _ListPageState extends State<ListPage> {
             },
             heroTag: 'scan',
             child: const Icon(Icons.camera_alt),
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return const SpeakListDialog();
-                },
-              );
-            },
-            heroTag: 'speak',
-            child: const Icon(Icons.mic),
           ),
           const SizedBox(height: 16),
           FloatingActionButton(

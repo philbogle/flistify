@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:speech_to_text/speech_recognition_result.dart';
 
 class SpeakListDialog extends StatefulWidget {
   const SpeakListDialog({super.key});
@@ -16,9 +17,9 @@ class SpeakListDialog extends StatefulWidget {
 class _SpeakListDialogState extends State<SpeakListDialog> {
   final SpeechToText _speechToText = SpeechToText();
   bool _speechEnabled = false;
-  String _lastWords = '';
+  String _transcript = ''; // The full text being built
+  String _baseTranscriptForCurrentSession = ''; // The text when listening started
   bool _isListening = false;
-  bool _manuallyStopped = false;
 
   @override
   void initState() {
@@ -27,85 +28,79 @@ class _SpeakListDialogState extends State<SpeakListDialog> {
   }
 
   void _initSpeech() async {
-    _speechEnabled = await _speechToText.initialize(
-      onStatus: _onSpeechStatus,
-    );
-    setState(() {});
+    _speechEnabled = await _speechToText.initialize();
+    if (mounted) {
+      setState(() {});
+      if (_speechEnabled) {
+        _startListening();
+      }
+    }
   }
 
   void _startListening() async {
-    _manuallyStopped = false;
+    // Store the current transcript to build upon it.
+    _baseTranscriptForCurrentSession = _transcript.isNotEmpty ? '$_transcript ' : '';
+
     await _speechToText.listen(
       onResult: _onSpeechResult,
-      listenFor: const Duration(minutes: 1), // Listen for up to a minute
-      pauseFor: const Duration(seconds: 10), // Tolerate longer pauses
-      onSoundLevelChange: null,
-      cancelOnError: false,
+      listenFor: const Duration(minutes: 2),
+      pauseFor: const Duration(seconds: 5),
     );
-    setState(() {
-      _isListening = true;
-    });
-  }
-
-  void _stopListening() async {
-    _manuallyStopped = true;
-    await _speechToText.stop();
-    setState(() {
-      _isListening = false;
-    });
-  }
-
-  void _onSpeechStatus(String status) {
-    if (status == 'notListening' && _isListening && !_manuallyStopped) {
-      // Auto-restart listening if it stopped unexpectedly
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted && _isListening && !_manuallyStopped) {
-          _startListening();
-        }
+    if (mounted) {
+      setState(() {
+        _isListening = true;
       });
     }
   }
 
-  void _onSpeechResult(result) {
+  void _stopListening() async {
+    await _speechToText.stop();
+    if (mounted) {
+      setState(() {
+        _isListening = false;
+      });
+    }
+  }
+
+  void _onSpeechResult(SpeechRecognitionResult result) {
     setState(() {
-      final recognized = result.recognizedWords.trim();
-      if (recognized.isEmpty) return;
-      if (_lastWords.isEmpty) {
-        _lastWords = recognized;
-      } else if (!recognized.startsWith(_lastWords)) {
-        // If the new recognized text doesn't start with the old, append with a space
-        _lastWords = (_lastWords + ' ' + recognized).trim();
-      } else {
-        // If recognized text starts with _lastWords, just update (covers incremental recognition)
-        _lastWords = recognized;
-      }
+      _transcript = '$_baseTranscriptForCurrentSession${result.recognizedWords}';
     });
   }
 
   void _createList() async {
-    if (_lastWords.isEmpty) return;
+    if (_transcript.trim().isEmpty) return;
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
 
     try {
       final response = await http.post(
         Uri.parse('https://studio-ten-black.vercel.app/api/extractFromText'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'dictatedText': _lastWords}),
+        body: jsonEncode({'dictatedText': _transcript.trim()}),
       );
+
+      Navigator.of(context).pop(); // Dismiss loading indicator
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final title = data['parentListTitle'] ?? 'Spoken List';
         final subitems = (data['extractedSubitems'] as List<dynamic>? ?? [])
-            .map((item) => {
-                  'id': DateTime.now().millisecondsSinceEpoch.toString() +
-                      (item['title'] ?? ''),
-                  'title': item['title'] ?? '',
-                  'completed': false,
-                })
-            .toList();
+            .map((item) {
+              final newSubitemRef = FirebaseFirestore.instance.collection('tasks').doc().collection('subtasks').doc();
+              return {
+                'id': newSubitemRef.id,
+                'title': item['title'] ?? '',
+                'completed': false,
+              };
+            }).toList();
 
         await FirebaseFirestore.instance.collection('tasks').add({
           'title': title,
@@ -116,13 +111,14 @@ class _SpeakListDialogState extends State<SpeakListDialog> {
         });
 
         if (mounted) {
-          Navigator.of(context).pop();
+          Navigator.of(context).pop(); // Dismiss the dialog
         }
       } else {
         throw Exception('Failed to create list: ${response.body}');
       }
     } catch (e) {
       if (mounted) {
+        Navigator.of(context).pop(); // Dismiss loading indicator on error
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Failed to create list: $e"),
@@ -147,7 +143,16 @@ class _SpeakListDialogState extends State<SpeakListDialog> {
                     : 'Speech not available, please grant permissions.',
           ),
           const SizedBox(height: 16),
-          Text(_lastWords, style: const TextStyle(fontSize: 16)),
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            constraints: const BoxConstraints(minHeight: 100),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Text(_transcript, style: const TextStyle(fontSize: 16)),
+          ),
         ],
       ),
       actions: [
@@ -156,11 +161,11 @@ class _SpeakListDialogState extends State<SpeakListDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: _isListening ? _stopListening : _startListening,
+          onPressed: _speechEnabled ? (_isListening ? _stopListening : _startListening) : null,
           child: Icon(_isListening ? Icons.mic_off : Icons.mic),
         ),
         ElevatedButton(
-          onPressed: _lastWords.isNotEmpty ? _createList : null,
+          onPressed: _transcript.trim().isNotEmpty ? _createList : null,
           child: const Text('Create List'),
         ),
       ],

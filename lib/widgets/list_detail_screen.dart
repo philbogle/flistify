@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/list.dart';
 import 'package:listify_mobile/models/subitem.dart';
-import 'package:listify_mobile/widgets/add_subitem_dialog.dart';
 import 'package:listify_mobile/widgets/subtask_item.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -17,16 +16,18 @@ class ListDetailScreen extends StatefulWidget {
 }
 
 class _ListDetailScreenState extends State<ListDetailScreen> {
+  late TextEditingController _titleController;
   bool _isEditing = false;
-  late final TextEditingController _titleController;
   final FocusNode _titleFocusNode = FocusNode();
   final GlobalKey _titleKey = GlobalKey();
+
+  List<Subitem> _subitems = [];
+  String? _newlyAddedSubitemId;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController();
-    // Add a listener to save when focus is lost
     _titleFocusNode.addListener(() {
       if (!_titleFocusNode.hasFocus && _isEditing) {
         _updateTitle();
@@ -55,6 +56,27 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     }
   }
 
+  void _addNewSubitem() {
+    final newSubitem = Subitem(
+      id: FirebaseFirestore.instance.collection('dummy').doc().id,
+      title: '',
+      completed: false,
+    );
+
+    setState(() {
+      _subitems.add(newSubitem);
+      _newlyAddedSubitemId = newSubitem.id;
+    });
+
+    _updateFirestoreSubitems();
+  }
+
+  void _updateFirestoreSubitems() {
+    FirebaseFirestore.instance.collection('tasks').doc(widget.listId).update({
+      'subtasks': _subitems.map((s) => s.toMap()).toList(),
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot>(
@@ -67,10 +89,15 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
         }
 
         final list = ListModel.fromMap(snapshot.data!.id, snapshot.data!.data() as Map<String, dynamic>);
+        _subitems = list.subitems;
         final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.black);
 
         if (!_isEditing) {
           _titleController.text = list.title;
+        }
+
+        if (_subitems.where((s) => s.title.isEmpty).isEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) => _addNewSubitem());
         }
 
         return Scaffold(
@@ -142,21 +169,23 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
               ),
             ],
           ),
-          body: ListView(
-            children: [
-              ...list.subitems.map((subitem) {
-                return SubtaskItem(subitem: subitem, listId: list.id);
-              }).toList(),
-            ],
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AddSubitemDialog(listId: list.id),
+          body: ListView.builder(
+            itemCount: _subitems.length,
+            itemBuilder: (context, index) {
+              final subitem = _subitems[index];
+              bool isNew = subitem.id == _newlyAddedSubitemId;
+              return SubtaskItem(
+                key: ValueKey(subitem.id),
+                subitem: subitem,
+                listId: list.id,
+                startInEditMode: isNew,
+                onSubmitted: () {
+                  if (isNew) {
+                    _addNewSubitem();
+                  }
+                },
               );
             },
-            child: const Icon(Icons.add),
           ),
         );
       },

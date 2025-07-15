@@ -1,57 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/list.dart';
+import 'package:listify_mobile/widgets/read_only_subtask_item.dart';
 import 'package:listify_mobile/widgets/list_detail_screen.dart';
 import 'package:listify_mobile/widgets/subtask_item.dart';
 
-class ListCard extends StatefulWidget {
+class ListCard extends StatelessWidget {
   final ListModel list;
+  final ValueChanged<bool?> onCompleted;
 
-  const ListCard({super.key, required this.list});
-
-  @override
-  State<ListCard> createState() => _ListCardState();
-}
-
-class _ListCardState extends State<ListCard> {
-  late bool _optimisticCompleted;
-
-  @override
-  void initState() {
-    super.initState();
-    _optimisticCompleted = widget.list.completed;
-  }
-
-  @override
-  void didUpdateWidget(ListCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.list.completed != oldWidget.list.completed) {
-      _optimisticCompleted = widget.list.completed;
-    }
-  }
-
-  void _handleCheckboxChanged(bool? value) {
-    if (value == null) return;
-
-    final originalValue = _optimisticCompleted;
-    setState(() {
-      _optimisticCompleted = value;
-    });
-
-    FirebaseFirestore.instance
-        .collection('tasks')
-        .doc(widget.list.id)
-        .update({'completed': value}).catchError((error) {
-      setState(() {
-        _optimisticCompleted = originalValue;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Couldn't update list. Please try again."),
-        ),
-      );
-    });
-  }
+  const ListCard({super.key, required this.list, required this.onCompleted});
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +19,7 @@ class _ListCardState extends State<ListCard> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ListDetailScreen(listId: widget.list.id),
+              builder: (context) => ListDetailScreen(listId: list.id),
             ),
           );
         },
@@ -70,25 +27,25 @@ class _ListCardState extends State<ListCard> {
           children: [
             ListTile(
               leading: Checkbox(
-                value: _optimisticCompleted,
-                onChanged: _handleCheckboxChanged,
+                value: list.completed,
+                onChanged: onCompleted,
               ),
               title: Text(
-                widget.list.title,
+                list.title,
                 style: TextStyle(
-                  decoration: _optimisticCompleted ? TextDecoration.lineThrough : null,
-                  color: _optimisticCompleted ? Colors.grey : null,
+                  decoration: list.completed ? TextDecoration.lineThrough : null,
+                  color: list.completed ? Colors.grey : null,
                 ),
               ),
               trailing: const Icon(Icons.chevron_right),
             ),
-            ...widget.list.subitems.map((subitem) {
+            ...list.subitems.where((s) => s.title.isNotEmpty).map((subitem) {
               return Padding(
                 padding: const EdgeInsets.only(left: 32.0),
-                child: SubtaskItem(subitem: subitem, listId: widget.list.id),
+                child: ReadOnlySubtaskItem(subitem: subitem, listId: list.id),
               );
             }).toList(),
-            const SizedBox(height: 8), // Add some padding at the bottom
+            const SizedBox(height: 8),
           ],
         ),
       ),
