@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/list.dart';
@@ -5,6 +6,8 @@ import 'package:listify_mobile/models/subitem.dart';
 import 'package:listify_mobile/widgets/subtask_item.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:listify_mobile/widgets/confirm_delete_dialog.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ListDetailScreen extends StatefulWidget {
   final String listId;
@@ -20,9 +23,11 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   bool _isEditing = false;
   final FocusNode _titleFocusNode = FocusNode();
   final GlobalKey _titleKey = GlobalKey();
+  final GlobalKey<AnimatedListState> _animatedListKey = GlobalKey<AnimatedListState>();
 
   List<Subitem> _subitems = [];
   String? _newlyAddedSubitemId;
+  bool _isReturningFromPicker = false;
 
   @override
   void initState() {
@@ -33,23 +38,37 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
         _updateTitle();
       }
     });
+
+    // Add an initial blank item if the list is empty
+    FirebaseFirestore.instance.collection('tasks').doc(widget.listId).get().then((doc) {
+      if (doc.exists) {
+        final list = ListModel.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+        if (list.subitems.where((s) => s.title.isNotEmpty).isEmpty && list.subitems.where((s) => s.title.isEmpty).isEmpty) {
+          _addNewSubitem();
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
+    // Save any pending edits before the screen is destroyed
+    if (_isEditing) {
+      _updateTitle(silent: true);
+    }
     _titleController.dispose();
     _titleFocusNode.dispose();
     super.dispose();
   }
 
-  void _updateTitle() {
+  void _updateTitle({bool silent = false}) {
     if (_titleController.text.isNotEmpty) {
       FirebaseFirestore.instance
           .collection('tasks')
           .doc(widget.listId)
           .update({'title': _titleController.text});
     }
-    if (mounted) {
+    if (mounted && !silent) {
       setState(() {
         _isEditing = false;
       });
@@ -68,12 +87,40 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
       _newlyAddedSubitemId = newSubitem.id;
     });
 
-    _updateFirestoreSubitems();
-  }
-
-  void _updateFirestoreSubitems() {
     FirebaseFirestore.instance.collection('tasks').doc(widget.listId).update({
       'subtasks': _subitems.map((s) => s.toMap()).toList(),
+    });
+  }
+
+  void _deleteSubitem(int index) {
+    final removedItem = _subitems.removeAt(index);
+    final listRef = FirebaseFirestore.instance.collection('tasks').doc(widget.listId);
+
+    // Animate the removal
+    _animatedListKey.currentState?.removeItem(
+      index,
+      (context, animation) => SizeTransition(
+        sizeFactor: animation,
+        child: SubtaskItem(
+          subitem: removedItem,
+          listId: widget.listId,
+        ),
+      ),
+      duration: const Duration(milliseconds: 300),
+    );
+
+    // Update Firestore in the background
+    listRef.update({
+      'subtasks': _subitems.map((s) => s.toMap()).toList(),
+    }).catchError((error) {
+      // If the update fails, re-insert the item and show an error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to delete item: $error")),
+      );
+      setState(() {
+        _subitems.insert(index, removedItem);
+        _animatedListKey.currentState?.insertItem(index);
+      });
     });
   }
 
@@ -96,58 +143,31 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
           _titleController.text = list.title;
         }
 
-        if (_subitems.where((s) => s.title.isEmpty).isEmpty) {
-            WidgetsBinding.instance.addPostFrameCallback((_) => _addNewSubitem());
-        }
-
-        return Scaffold(
+        final child = Scaffold(
           appBar: AppBar(
-            title: _isEditing
-                ? TextField(
-                    controller: _titleController,
-                    focusNode: _titleFocusNode,
-                    autofocus: true,
-                    style: titleStyle,
-                    cursorColor: Colors.black,
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Enter list title',
-                      hintStyle: TextStyle(color: Colors.black54),
-                    ),
-                    onSubmitted: (_) => _updateTitle(),
-                  )
-                : GestureDetector(
-                    onTapDown: (details) {
-                      final RenderBox renderBox = _titleKey.currentContext!.findRenderObject() as RenderBox;
-                      final offset = renderBox.globalToLocal(details.globalPosition);
-                      final textSpan = TextSpan(text: list.title, style: titleStyle);
-                      final textPainter = TextPainter(text: textSpan, textDirection: TextDirection.ltr)..layout();
-                      final position = textPainter.getPositionForOffset(offset);
-
-                      setState(() {
-                        _isEditing = true;
-                      });
-
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        _titleFocusNode.requestFocus();
-                        _titleController.selection = TextSelection.fromPosition(position);
-                      });
-                    },
-                    child: Text(list.title, key: _titleKey, style: titleStyle),
-                  ),
+            title: Text(list.title, style: titleStyle),
             actions: [
               PopupMenuButton<String>(
-                onSelected: (String result) {
+                onSelected: (String result) async {
                   switch (result) {
                     case 'delete':
-                      Navigator.of(context).pop();
-                      FirebaseFirestore.instance.collection('tasks').doc(list.id).delete();
+                      final bool? confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => ConfirmDeleteDialog(listName: list.title),
+                      );
+                      if (confirmed == true) {
+                        Navigator.of(context).pop();
+                        FirebaseFirestore.instance.collection('tasks').doc(list.id).delete();
+                      }
                       break;
                     case 'autogenerate':
                       _autogenerateItems(list);
                       break;
                     case 'autosort':
                       _autosortItems(list);
+                      break;
+                    case 'scan_more':
+                      _scanAndAppendItems(list);
                       break;
                   }
                 },
@@ -165,13 +185,30 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                     value: 'autosort',
                     child: Text('Autosort Items'),
                   ),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem<String>(
+                    value: 'scan_more',
+                    child: Text('Scan More Items'),
+                  ),
                 ],
               ),
             ],
           ),
           body: ListView.builder(
-            itemCount: _subitems.length,
+            key: _animatedListKey,
+            itemCount: _subitems.length + 1, // Add one for the button
             itemBuilder: (context, index) {
+              if (index == _subitems.length) {
+                return Padding(
+                  padding: const EdgeInsets.only(left: 16.0, top: 8.0),
+                  child: TextButton.icon(
+                    onPressed: _addNewSubitem,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add list item'),
+                  ),
+                );
+              }
+
               final subitem = _subitems[index];
               bool isNew = subitem.id == _newlyAddedSubitemId;
               return SubtaskItem(
@@ -179,6 +216,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                 subitem: subitem,
                 listId: list.id,
                 startInEditMode: isNew,
+                onDelete: () => _deleteSubitem(index),
                 onSubmitted: () {
                   if (isNew) {
                     _addNewSubitem();
@@ -186,6 +224,18 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                 },
               );
             },
+          ),
+        );
+
+        if (_isReturningFromPicker) {
+          return child;
+        }
+
+        return Hero(
+          tag: 'list_card_${list.id}',
+          child: Material(
+            type: MaterialType.transparency,
+            child: child,
           ),
         );
       },
@@ -198,5 +248,92 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
 
   void _autosortItems(ListModel list) async {
     // ... (autosort logic remains the same)
+  }
+
+  void _scanAndAppendItems(ListModel list) async {
+    setState(() {
+      _isReturningFromPicker = true;
+    });
+
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1280,
+      maxHeight: 1280,
+      imageQuality: 80,
+    );
+
+    if (pickedFile == null) {
+      setState(() {
+        _isReturningFromPicker = false;
+      });
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Recognizing list...')),
+    );
+
+    try {
+      final bytes = await pickedFile.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      final imageDataUri = 'data:image/jpeg;base64,$base64Image';
+
+      final response = await http.post(
+        Uri.parse('https://studio-ten-black.vercel.app/api/extractFromImage'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'imageDataUri': imageDataUri}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final newSubitemTitles = (data['extractedSubitems'] as List<dynamic>? ?? [])
+            .map((item) => item['title'] as String)
+            .toList();
+
+        final newSubitems = newSubitemTitles.map((title) {
+          final newSubitemRef = FirebaseFirestore.instance
+              .collection('tasks')
+              .doc(list.id)
+              .collection('subtasks')
+              .doc();
+          return {
+            'id': newSubitemRef.id,
+            'title': title,
+            'completed': false,
+          };
+        }).toList();
+
+        // Find the index of the blank item, if it exists
+        final blankItemIndex = list.subitems.indexWhere((s) => s.title.isEmpty);
+
+        if (blankItemIndex != -1) {
+          // If a blank item exists, insert the new items before it
+          final updatedSubtasks = List.from(list.subitems)..insertAll(blankItemIndex, newSubitems);
+          await FirebaseFirestore.instance.collection('tasks').doc(list.id).update({
+            'subtasks': updatedSubtasks.map((s) => s.toMap()).toList(),
+          });
+        } else {
+          // Otherwise, just append the new items
+          await FirebaseFirestore.instance.collection('tasks').doc(list.id).update({
+            'subtasks': FieldValue.arrayUnion(newSubitems),
+          });
+        }
+      } else {
+        throw Exception('Failed to scan items: ${response.body}');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error scanning items: $e")),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isReturningFromPicker = false;
+        });
+      }
+    }
   }
 }

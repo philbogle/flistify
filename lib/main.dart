@@ -5,15 +5,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
 import 'models/list.dart';
-import 'widgets/manual_add_list.dart';
-import 'widgets/speak_list_dialog.dart';
-import 'widgets/scan_list_dialog.dart';
-import 'widgets/app_drawer.dart';
 import 'widgets/list_card.dart';
 import 'widgets/list_detail_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'widgets/app_drawer.dart';
+import 'widgets/manual_add_list.dart';
+import 'widgets/scan_list_dialog.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,19 +47,44 @@ class AuthGate extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         if (!snapshot.hasData) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Listify'),
+              title: const Text('Welcome to Listify'),
             ),
-            body: Center(
+            body: Padding(
+              padding: const EdgeInsets.all(24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Sign in to manage your lists'),
-                  const SizedBox(height: 20),
+                  const Spacer(),
+                  const Text(
+                    'Your intelligent list-making companion',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 40),
+                  const FeatureHighlight(
+                    icon: Icons.check_circle_outline,
+                    title: 'Effortless Lists',
+                    description: 'Quickly create and manage all of your to-do lists, shopping lists, and more.',
+                  ),
+                  const FeatureHighlight(
+                    icon: Icons.camera_alt_outlined,
+                    title: 'Scan from Camera',
+                    description: 'Instantly turn photos of handwritten notes or objects into digital lists.',
+                  ),
+                  const FeatureHighlight(
+                    icon: Icons.auto_awesome_outlined,
+                    title: 'AI-Powered Actions',
+                    description: 'Let artificial intelligence automatically sort your lists and suggest new items.',
+                  ),
+                  const Spacer(),
                   ElevatedButton(
                     onPressed: () async {
                       try {
@@ -79,8 +103,10 @@ class AuthGate extends StatelessWidget {
                         print(e); // Handle sign-in errors
                       }
                     },
-                    child: const Text('Sign in with Google'),
+                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                    child: const Text('Sign in with Google', style: TextStyle(fontSize: 18)),
                   ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -88,6 +114,42 @@ class AuthGate extends StatelessWidget {
         }
         return const ListPage();
       },
+    );
+  }
+}
+
+class FeatureHighlight extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+
+  const FeatureHighlight({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 32, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Text(description, style: const TextStyle(fontSize: 16, color: Colors.black54)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

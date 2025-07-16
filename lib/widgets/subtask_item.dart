@@ -8,12 +8,14 @@ class SubtaskItem extends StatefulWidget {
   final String listId;
   final bool startInEditMode;
   final VoidCallback? onSubmitted;
+  final VoidCallback? onDelete;
 
   const SubtaskItem({
     super.key,
     required this.subitem,
     required this.listId,
     this.onSubmitted,
+    this.onDelete,
     this.startInEditMode = false,
   });
 
@@ -130,6 +132,12 @@ class _SubtaskItemState extends State<SubtaskItem> {
                 ),
               ),
             ),
+      trailing: _isEditing
+          ? IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: widget.onDelete,
+            )
+          : null,
     );
   }
 }

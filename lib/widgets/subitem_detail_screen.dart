@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/subitem.dart';
@@ -14,7 +13,7 @@ class SubitemDetailScreen extends StatefulWidget {
 }
 
 class _SubitemDetailScreenState extends State<SubitemDetailScreen> {
-  late final TextEditingController _titleController;
+  late TextEditingController _titleController;
   bool _isEditing = false;
   final FocusNode _titleFocusNode = FocusNode();
   final GlobalKey _titleKey = GlobalKey();
@@ -32,13 +31,13 @@ class _SubitemDetailScreenState extends State<SubitemDetailScreen> {
 
   @override
   void dispose() {
-    _updateSubitem(); // Save on dispose
+    _updateSubitem(silent: true);
     _titleController.dispose();
     _titleFocusNode.dispose();
     super.dispose();
   }
 
-  void _updateSubitem() {
+  void _updateSubitem({bool silent = false}) {
     if (_titleController.text.isEmpty) return;
 
     final listRef = FirebaseFirestore.instance.collection('tasks').doc(widget.listId);
@@ -64,7 +63,7 @@ class _SubitemDetailScreenState extends State<SubitemDetailScreen> {
       }
     });
 
-    if (mounted && _isEditing) {
+    if (mounted && !silent) {
       setState(() {
         _isEditing = false;
       });
@@ -105,6 +104,7 @@ class _SubitemDetailScreenState extends State<SubitemDetailScreen> {
         final subitemData = subitems.firstWhere((s) => s['id'] == widget.subitemId, orElse: () => null);
 
         if (subitemData == null) {
+          // This can happen if the subitem is deleted while the user is on this screen
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if(mounted) Navigator.of(context).pop();
           });
@@ -114,6 +114,8 @@ class _SubitemDetailScreenState extends State<SubitemDetailScreen> {
         }
 
         final subitem = Subitem.fromMap(subitemData);
+        final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.black);
+
         if (!_isEditing) {
           _titleController.text = subitem.title;
         }
@@ -125,7 +127,7 @@ class _SubitemDetailScreenState extends State<SubitemDetailScreen> {
                     controller: _titleController,
                     focusNode: _titleFocusNode,
                     autofocus: true,
-                    style: const TextStyle(color: Colors.black, fontSize: 20),
+                    style: titleStyle,
                     cursorColor: Colors.black,
                     decoration: const InputDecoration(
                       border: InputBorder.none,
@@ -136,37 +138,30 @@ class _SubitemDetailScreenState extends State<SubitemDetailScreen> {
                   )
                 : GestureDetector(
                     onTapDown: (details) {
-                      final RenderBox renderBox = _titleKey.currentContext!.findRenderObject() as RenderBox;
-                      final offset = renderBox.globalToLocal(details.globalPosition);
-                      final textSpan = TextSpan(text: subitem.title, style: const TextStyle(fontSize: 20));
-                      final textPainter = TextPainter(text: textSpan, textDirection: TextDirection.ltr)..layout();
-                      final position = textPainter.getPositionForOffset(offset);
-
-                      setState(() {
-                        _isEditing = true;
-                      });
-
                       WidgetsBinding.instance.addPostFrameCallback((_) {
+                        final RenderBox renderBox = _titleKey.currentContext!.findRenderObject() as RenderBox;
+                        final offset = renderBox.globalToLocal(details.globalPosition);
+                        final textSpan = TextSpan(text: subitem.title, style: titleStyle);
+                        final textPainter = TextPainter(text: textSpan, textDirection: TextDirection.ltr)..layout();
+                        final position = textPainter.getPositionForOffset(offset);
+
+                        setState(() {
+                          _isEditing = true;
+                        });
+
                         _titleFocusNode.requestFocus();
                         _titleController.selection = TextSelection.fromPosition(position);
                       });
                     },
-                    child: Text(subitem.title, key: _titleKey),
+                    child: Text(subitem.title, key: _titleKey, style: titleStyle),
                   ),
             actions: [
-              PopupMenuButton<String>(
-                onSelected: (String result) {
-                  if (result == 'delete') {
-                    _deleteSubitem();
-                  }
-                },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  const PopupMenuItem<String>(
-                    value: 'delete',
-                    child: Text('Delete'),
-                  ),
-                ],
-              ),
+              if (_isEditing)
+                IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: _deleteSubitem,
+                  tooltip: 'Delete Item',
+                ),
             ],
           ),
           body: Container(), // Body is no longer needed for editing
