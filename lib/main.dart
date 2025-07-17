@@ -88,19 +88,28 @@ class AuthGate extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () async {
                       try {
-                        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-                        if (googleUser == null) {
-                          // The user canceled the sign-in
-                          return;
-                        }
-                        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+                        final GoogleSignIn googleSignIn = GoogleSignIn.instance;
+                        await googleSignIn.initialize();
+                        final GoogleSignInAccount googleUser = await googleSignIn.authenticate(
+                          scopeHint: ['email'],
+                        );
+                        final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+                        
+                        // Get authorization for Firebase scopes
+                        final authClient = googleSignIn.authorizationClient;
+                        final authorization = await authClient.authorizationForScopes(['email']);
+                        
                         final AuthCredential credential = GoogleAuthProvider.credential(
-                          accessToken: googleAuth.accessToken,
+                          accessToken: authorization?.accessToken,
                           idToken: googleAuth.idToken,
                         );
                         await FirebaseAuth.instance.signInWithCredential(credential);
+                      } on GoogleSignInException catch (e) {
+                        print('Google Sign In error: code: ${e.code.name} description: ${e.description} details: ${e.details}');
+                        rethrow;
                       } catch (e) {
-                        print(e); // Handle sign-in errors
+                        print('Unexpected Google Sign-In error: $e');
+                        rethrow;
                       }
                     },
                     style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
