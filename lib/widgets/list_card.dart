@@ -46,6 +46,26 @@ class _ListCardState extends State<ListCard> {
   Widget build(BuildContext context) {
     return Hero(
       tag: 'list_card_${widget.list.id}',
+      flightShuttleBuilder: (
+        BuildContext flightContext,
+        Animation<double> animation,
+        HeroFlightDirection flightDirection,
+        BuildContext fromHeroContext,
+        BuildContext toHeroContext,
+      ) {
+        return Material(
+          color: Colors.transparent,
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Theme.of(flightContext).primaryColor,
+                width: 2.0,
+              ),
+            ),
+            child: toHeroContext.widget,
+          ),
+        );
+      },
       child: Material(
         type: MaterialType.transparency,
         child: Card(
