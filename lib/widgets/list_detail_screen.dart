@@ -28,6 +28,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   List<Subitem> _subitems = [];
   String? _newlyAddedSubitemId;
   bool _isReturningFromPicker = false;
+  bool _isHeroEnabled = true;
 
   @override
   void initState() {
@@ -46,6 +47,15 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
         if (list.subitems.where((s) => s.title.isNotEmpty).isEmpty && list.subitems.where((s) => s.title.isEmpty).isEmpty) {
           _addNewSubitem();
         }
+      }
+    });
+
+    // Disable the Hero animation after the transition is likely complete.
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {
+          _isHeroEnabled = false;
+        });
       }
     });
   }
@@ -231,23 +241,113 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
           return child;
         }
 
-        return Hero(
-          tag: 'list_card_${list.id}',
-          child: Material(
-            type: MaterialType.transparency,
-            child: child,
-          ),
-        );
+        if (_isHeroEnabled) {
+          return Hero(
+            tag: 'list_card_${list.id}',
+            child: Material(
+              type: MaterialType.transparency,
+              child: child,
+            ),
+          );
+        } else {
+          return child;
+        }
       },
     );
   }
 
   void _autogenerateItems(ListModel list) async {
-    // ... (autogenerate logic remains the same)
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('🤖 Autogenerating items...')),
+    );
+
+    final requestBody = {
+      'listTitle': list.title,
+      'existingSubitems': list.subitems.map((s) => s.title).toList(),
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://studio-ten-black.vercel.app/api/generateSubitems'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final newSubitemTitles = (data['newSubitemTitles'] as List<dynamic>? ?? [])
+            .map((item) => item as String)
+            .toList();
+
+        final newSubitems = newSubitemTitles.map((title) {
+          final newSubitemRef = FirebaseFirestore.instance
+              .collection('tasks')
+              .doc(list.id)
+              .collection('subtasks')
+              .doc();
+
+          return {
+            'id': newSubitemRef.id,
+            'title': title,
+            'completed': false,
+          };
+        }).toList();
+
+        await FirebaseFirestore.instance.collection('tasks').doc(list.id).update({
+          'subtasks': FieldValue.arrayUnion(newSubitems),
+        });
+      } else {
+        throw Exception('Server returned status code ${response.statusCode}');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error generating items: $e")),
+        );
+      }
+    }
   }
 
   void _autosortItems(ListModel list) async {
-    // ... (autosort logic remains the same)
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('🤖 Autosorting items...')),
+    );
+
+    final requestBody = {
+      'listTitle': list.title,
+      'subitems': list.subitems.map((s) => {'id': s.id, 'title': s.title, 'completed': s.completed}).toList(),
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://studio-ten-black.vercel.app/api/autosortListItems'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final sortedSubitems = (data['sortedSubitems'] as List<dynamic>? ?? [])
+            .map((item) => {
+                  'id': list.subitems.firstWhere((s) => s.title == item['title'], orElse: () => Subitem(id: DateTime.now().millisecondsSinceEpoch.toString(), title: item['title'], completed: item['completed'])).id,
+                  'title': item['title'] ?? '',
+                  'completed': item['completed'] ?? false,
+                })
+            .toList();
+
+        await FirebaseFirestore.instance.collection('tasks').doc(list.id).update({
+          'subtasks': sortedSubitems,
+        });
+      } else {
+        throw Exception('Server returned status code ${response.statusCode}');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error sorting items: $e")),
+        );
+      }
+    }
   }
 
   void _scanAndAppendItems(ListModel list) async {
