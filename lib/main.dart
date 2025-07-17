@@ -325,10 +325,50 @@ class _ListPageState extends State<ListPage> {
 
               return ListView(
                 children: [
+                  if (activeLists.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Card(
+                        margin: EdgeInsets.zero, // Reset margin as padding is applied to parent
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.lightbulb_outline, size: 48, color: Colors.amber),
+                              SizedBox(height: 16),
+                              Text(
+                                'No lists yet!',
+                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 8),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Tap the ➕ button to add a list manually.',
+                                    style: TextStyle(fontSize: 16),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Tap the 📷 button to scan a list.',
+                                    style: TextStyle(fontSize: 16),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ...activeLists.map((list) => ListCard(key: ValueKey(list.id), list: list, onCompleted: (value) => _handleListCompleted(list, value))),
                   if (completedLists.isNotEmpty)
                     ExpansionTile(
                       title: const Text('Completed', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      trailing: null,
                       initiallyExpanded: _isCompletedExpanded,
                       onExpansionChanged: (bool expanded) {
                         setState(() {
@@ -337,7 +377,7 @@ class _ListPageState extends State<ListPage> {
                       },
                       children: completedLists.map((list) => ListCard(key: ValueKey(list.id), list: list, onCompleted: (value) => _handleListCompleted(list, value))).toList(),
                     ),
-                  const SizedBox(height: 80), // Padding for FABs
+                  const SizedBox(height: 140), // Padding for FABs
                 ],
               );
             },

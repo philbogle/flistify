@@ -223,43 +223,85 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                   }
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  const PopupMenuItem<String>(
+                  PopupMenuItem<String>(
                     value: 'delete',
-                    child: Text('Delete'),
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_outline),
+                        SizedBox(width: 8),
+                        Text('Delete List'),
+                      ],
+                    ),
                   ),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem<String>(
-                    value: 'autogenerate',
-                    child: Text('Autogenerate Items'),
-                  ),
-                  const PopupMenuItem<String>(
-                    value: 'autosort',
-                    child: Text('Autosort Items'),
-                  ),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem<String>(
-                    value: 'scan_more',
-                    child: Text('Scan More Items'),
-                  ),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem<String>(
-                    value: 'dictate_or_paste',
-                    child: Text('Dictate or Paste'),
-                  ),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem<String>(
-                    value: 'share',
-                    child: Text('Share List'),
-                  ),
-                  const PopupMenuItem<String>(
+                  PopupMenuItem<String>(
                     value: 'delete_completed',
-                    child: Text('Delete Completed Items'),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle_outline),
+                        SizedBox(width: 8),
+                        Text('Delete Completed Items'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem<String>(
+                    value: 'autogenerate',
+                    child: Row(
+                      children: [
+                        Icon(Icons.auto_awesome_outlined),
+                        SizedBox(width: 8),
+                        Text('Autogenerate Items'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'autosort',
+                    child: Row(
+                      children: [
+                        Icon(Icons.sort),
+                        SizedBox(width: 8),
+                        Text('Autosort Items'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem<String>(
+                    value: 'scan_more',
+                    child: Row(
+                      children: [
+                        Icon(Icons.camera_alt_outlined),
+                        SizedBox(width: 8),
+                        Text('Scan More Items'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'dictate_or_paste',
+                    child: Row(
+                      children: [
+                        Icon(Icons.mic_none),
+                        SizedBox(width: 8),
+                        Text('Dictate or Paste'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem<String>(
+                    value: 'share',
+                    child: Row(
+                      children: [
+                        Icon(Icons.share),
+                        SizedBox(width: 8),
+                        Text('Share List'),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ],
           ),
           body: ListView.builder(
+            padding: const EdgeInsets.only(bottom: 80.0), // Added padding to prevent FAB overlap
             key: _animatedListKey,
             itemCount: _subitems.length + 1, // Add one for the button
             itemBuilder: (context, index) {
