@@ -8,6 +8,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:listify_mobile/widgets/confirm_delete_dialog.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:listify_mobile/widgets/dictate_list_dialog.dart';
+import 'package:listify_mobile/constants.dart';
+import 'package:listify_mobile/widgets/share_list_dialog.dart';
 
 class ListDetailScreen extends StatefulWidget {
   final String listId;
@@ -179,6 +182,44 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                     case 'scan_more':
                       _scanAndAppendItems(list);
                       break;
+                    case 'dictate_or_paste':
+                      showDialog(
+                        context: context,
+                        builder: (context) => DictateListDialog(list: list),
+                      );
+                      break;
+                    case 'share':
+                      if (list.shareId == null) {
+                        final newShareId = FirebaseFirestore.instance.collection('dummy').doc().id;
+                        FirebaseFirestore.instance.collection('tasks').doc(list.id).update({
+                          'shareId': newShareId,
+                        }).then((_) {
+                          final newList = ListModel(
+                            id: list.id,
+                            title: list.title,
+                            completed: list.completed,
+                            subitems: list.subitems,
+                            createdAt: list.createdAt,
+                            shareId: newShareId,
+                          );
+                          showDialog(
+                            context: context,
+                            builder: (context) => ShareListDialog(list: newList),
+                          );
+                        });
+                      } else {
+                        showDialog(
+                          context: context,
+                          builder: (context) => ShareListDialog(list: list),
+                        );
+                      }
+                      break;
+                    case 'delete_completed':
+                      final updatedSubitems = list.subitems.where((s) => !s.completed).toList();
+                      FirebaseFirestore.instance.collection('tasks').doc(list.id).update({
+                        'subtasks': updatedSubitems.map((s) => s.toMap()).toList(),
+                      });
+                      break;
                   }
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -199,6 +240,20 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                   const PopupMenuItem<String>(
                     value: 'scan_more',
                     child: Text('Scan More Items'),
+                  ),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem<String>(
+                    value: 'dictate_or_paste',
+                    child: Text('Dictate or Paste'),
+                  ),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem<String>(
+                    value: 'share',
+                    child: Text('Share List'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'delete_completed',
+                    child: Text('Delete Completed Items'),
                   ),
                 ],
               ),
@@ -268,7 +323,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://studio-ten-black.vercel.app/api/generateSubitems'),
+        Uri.parse('$baseUrl/api/generateSubitems'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
@@ -320,7 +375,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://studio-ten-black.vercel.app/api/autosortListItems'),
+        Uri.parse('$baseUrl/api/autosortListItems'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
@@ -380,7 +435,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
       final imageDataUri = 'data:image/jpeg;base64,$base64Image';
 
       final response = await http.post(
-        Uri.parse('https://studio-ten-black.vercel.app/api/extractFromImage'),
+        Uri.parse('$baseUrl/api/extractFromImage'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'imageDataUri': imageDataUri}),
       );

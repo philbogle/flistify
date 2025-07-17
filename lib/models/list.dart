@@ -7,6 +7,7 @@ class ListModel {
   final bool completed;
   final List<Subitem> subitems;
   final Timestamp createdAt;
+  final String? shareId;
 
   ListModel({
     required this.id,
@@ -14,6 +15,7 @@ class ListModel {
     required this.completed,
     required this.subitems,
     required this.createdAt,
+    this.shareId,
   });
 
   factory ListModel.fromMap(String id, Map<String, dynamic> data) {
@@ -25,6 +27,7 @@ class ListModel {
           .map((item) => Subitem.fromMap(item as Map<String, dynamic>))
           .toList(),
       createdAt: data['createdAt'] as Timestamp? ?? Timestamp.now(),
+      shareId: data['shareId'] as String?,
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/list.dart';
 import 'package:listify_mobile/widgets/list_detail_screen.dart';
 import 'package:listify_mobile/widgets/read_only_subtask_item.dart';
+import 'package:listify_mobile/widgets/share_list_dialog.dart';
 
 class ListCard extends StatefulWidget {
   final ListModel list;
@@ -72,7 +73,6 @@ class _ListCardState extends State<ListCard> {
                       color: _optimisticCompleted ? Colors.grey : null,
                     ),
                   ),
-                  trailing: const Icon(Icons.chevron_right),
                 ),
                 ...widget.list.subitems.where((s) => s.title.isNotEmpty).map((subitem) {
                   return Padding(
