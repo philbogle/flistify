@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 import 'models/list.dart';
 import 'widgets/list_card.dart';
@@ -88,28 +89,27 @@ class AuthGate extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () async {
                       try {
-                        final GoogleSignIn googleSignIn = GoogleSignIn.instance;
-                        await googleSignIn.initialize();
-                        final GoogleSignInAccount googleUser = await googleSignIn.authenticate(
-                          scopeHint: ['email'],
-                        );
-                        final GoogleSignInAuthentication googleAuth = googleUser.authentication;
-                        
-                        // Get authorization for Firebase scopes
-                        final authClient = googleSignIn.authorizationClient;
-                        final authorization = await authClient.authorizationForScopes(['email']);
-                        
+                        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+                        if (googleUser == null) {
+                          // User cancelled the sign-in
+                          return;
+                        }
+
+                        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
                         final AuthCredential credential = GoogleAuthProvider.credential(
-                          accessToken: authorization?.accessToken,
+                          accessToken: googleAuth.accessToken,
                           idToken: googleAuth.idToken,
                         );
                         await FirebaseAuth.instance.signInWithCredential(credential);
-                      } on GoogleSignInException catch (e) {
-                        print('Google Sign In error: code: ${e.code.name} description: ${e.description} details: ${e.details}');
-                        rethrow;
                       } catch (e) {
-                        print('Unexpected Google Sign-In error: $e');
-                        rethrow;
+                        print('Failed to sign in with Google: $e');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to sign in with Google: $e'),
+                          ),
+                        );
                       }
                     },
                     style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
