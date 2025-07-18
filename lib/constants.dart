@@ -1,0 +1,1 @@
+const String baseUrl = 'https://studio-ten-black.vercel.app';
