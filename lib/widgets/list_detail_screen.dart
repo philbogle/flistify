@@ -140,7 +140,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
 
         final list = ListModel.fromMap(snapshot.data!.id, snapshot.data!.data() as Map<String, dynamic>);
         _subitems = list.subitems;
-        final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.black);
+        final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.black, fontWeight: FontWeight.bold);
 
         if (!_isEditing) {
           _titleController.text = list.title;
@@ -210,26 +210,22 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                         'subtasks': updatedSubitems.map((s) => s.toMap()).toList(),
                       });
                       break;
+                    case 'mark_complete':
+                      FirebaseFirestore.instance.collection('tasks').doc(list.id).update({
+                        'completed': true,
+                      });
+                      Navigator.of(context).pop();
+                      break;
                   }
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                   PopupMenuItem<String>(
-                    value: 'delete',
+                    value: 'mark_complete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline),
+                        Icon(Icons.check),
                         SizedBox(width: 8),
-                        Text('Delete List'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'delete_completed',
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle_outline),
-                        SizedBox(width: 8),
-                        Text('Delete Completed Items'),
+                        Text('Mark Complete'),
                       ],
                     ),
                   ),
@@ -283,6 +279,27 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                         Icon(Icons.share),
                         SizedBox(width: 8),
                         Text('Share List'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem<String>(
+                    value: 'delete_completed',
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle_outline),
+                        SizedBox(width: 8),
+                        Text('Delete Completed Items'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_outline),
+                        SizedBox(width: 8),
+                        Text('Delete List'),
                       ],
                     ),
                   ),

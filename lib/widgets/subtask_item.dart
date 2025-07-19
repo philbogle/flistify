@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/subitem.dart';
 
+import 'package:listify_mobile/widgets/circular_checkbox.dart';
+
 class SubtaskItem extends StatefulWidget {
   final Subitem subitem;
   final String listId;
@@ -27,12 +29,14 @@ class _SubtaskItemState extends State<SubtaskItem> {
   late final TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
   bool _isEditing = false;
+  late bool _optimisticCompleted;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.subitem.title);
     _isEditing = widget.startInEditMode;
+    _optimisticCompleted = widget.subitem.completed;
 
     if (_isEditing) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -88,6 +92,11 @@ class _SubtaskItemState extends State<SubtaskItem> {
 
   void _handleCheckboxChanged(bool? value) {
     if (value == null) return;
+
+    setState(() {
+      _optimisticCompleted = value;
+    });
+
     final listRef = FirebaseFirestore.instance.collection('tasks').doc(widget.listId);
     FirebaseFirestore.instance.runTransaction((transaction) async {
       final snapshot = await transaction.get(listRef);
@@ -106,8 +115,8 @@ class _SubtaskItemState extends State<SubtaskItem> {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Checkbox(
-        value: widget.subitem.completed,
+      leading: CircularCheckbox(
+        value: _optimisticCompleted,
         onChanged: _handleCheckboxChanged,
       ),
       title: _isEditing
@@ -127,8 +136,8 @@ class _SubtaskItemState extends State<SubtaskItem> {
               child: Text(
                 _controller.text, // Use the controller's text for optimistic updates
                 style: TextStyle(
-                  decoration: widget.subitem.completed ? TextDecoration.lineThrough : null,
-                  color: widget.subitem.completed ? Colors.grey : null,
+                  decoration: _optimisticCompleted ? TextDecoration.lineThrough : null,
+                  color: _optimisticCompleted ? Colors.grey : null,
                 ),
               ),
             ),

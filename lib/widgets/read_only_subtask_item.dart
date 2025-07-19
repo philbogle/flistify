@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/subitem.dart';
 
+import 'package:listify_mobile/widgets/circular_checkbox.dart';
+
 class ReadOnlySubtaskItem extends StatefulWidget {
   final Subitem subitem;
   final String listId;
@@ -67,7 +69,7 @@ class _ReadOnlySubtaskItemState extends State<ReadOnlySubtaskItem> {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Checkbox(
+      leading: CircularCheckbox(
         value: _optimisticCompleted,
         onChanged: _handleCheckboxChanged,
       ),

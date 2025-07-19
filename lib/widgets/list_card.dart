@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/list.dart';
+import 'package:listify_mobile/widgets/circular_checkbox.dart';
 import 'package:listify_mobile/widgets/list_detail_screen.dart';
 import 'package:listify_mobile/widgets/read_only_subtask_item.dart';
 import 'package:listify_mobile/widgets/share_list_dialog.dart';
@@ -69,7 +70,7 @@ class _ListCardState extends State<ListCard> {
         child: Column(
           children: [
             ListTile(
-              leading: Checkbox(
+              leading: CircularCheckbox(
                 value: _optimisticCompleted,
                 onChanged: _handleCheckboxChanged,
               ),
@@ -80,6 +81,7 @@ class _ListCardState extends State<ListCard> {
                       ? TextDecoration.lineThrough
                       : null,
                   color: _optimisticCompleted ? Colors.grey : null,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               trailing: const Icon(Icons.chevron_right),
