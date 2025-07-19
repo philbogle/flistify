@@ -44,75 +44,57 @@ class _ListCardState extends State<ListCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Hero(
-      tag: 'list_card_${widget.list.id}',
-      flightShuttleBuilder: (
-        BuildContext flightContext,
-        Animation<double> animation,
-        HeroFlightDirection flightDirection,
-        BuildContext fromHeroContext,
-        BuildContext toHeroContext,
-      ) {
-        final Hero toHero = toHeroContext.widget as Hero;
-        final Material heroMaterial = toHero.child as Material;
-        final Card card = heroMaterial.child as Card;
-
-        return Material(
-          type: MaterialType.transparency,
-          child: Card(
-            margin: card.margin,
-            clipBehavior: card.clipBehavior,
-            color: card.color,
-            elevation: card.elevation,
-            shape: RoundedRectangleBorder(
-              borderRadius: (card.shape as RoundedRectangleBorder?)?.borderRadius ?? BorderRadius.circular(12.0),
-              side: BorderSide(
-                color: Theme.of(flightContext).primaryColor,
-                width: 2.0,
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  ListDetailScreen(listId: widget.list.id),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                return SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(1.0, 0.0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                );
+              },
+            ),
+          );
+        },
+        child: Column(
+          children: [
+            ListTile(
+              leading: Checkbox(
+                value: _optimisticCompleted,
+                onChanged: _handleCheckboxChanged,
               ),
-            ),
-            child: card.child,
-          ),
-        );
-      },
-      child: Material(
-        type: MaterialType.transparency,
-        child: Card(
-          margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ListDetailScreen(listId: widget.list.id),
+              title: Text(
+                widget.list.title,
+                style: TextStyle(
+                  decoration: _optimisticCompleted
+                      ? TextDecoration.lineThrough
+                      : null,
+                  color: _optimisticCompleted ? Colors.grey : null,
                 ),
+              ),
+              trailing: const Icon(Icons.chevron_right),
+            ),
+            ...widget.list.subitems
+                .where((s) => s.title.isNotEmpty)
+                .map((subitem) {
+              return Padding(
+                padding: const EdgeInsets.only(left: 32.0),
+                child: ReadOnlySubtaskItem(
+                    subitem: subitem, listId: widget.list.id),
               );
-            },
-            child: Column(
-              children: [
-                ListTile(
-                  leading: Checkbox(
-                    value: _optimisticCompleted,
-                    onChanged: _handleCheckboxChanged,
-                  ),
-                  title: Text(
-                    widget.list.title,
-                    style: TextStyle(
-                      decoration: _optimisticCompleted ? TextDecoration.lineThrough : null,
-                      color: _optimisticCompleted ? Colors.grey : null,
-                    ),
-                  ),
-                ),
-                ...widget.list.subitems.where((s) => s.title.isNotEmpty).map((subitem) {
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 32.0),
-                    child: ReadOnlySubtaskItem(subitem: subitem, listId: widget.list.id),
-                  );
-                }).toList(),
-                const SizedBox(height: 8), // Add some padding at the bottom
-              ],
-            ),
-          ),
+            }).toList(),
+            const SizedBox(height: 8), // Add some padding at the bottom
+          ],
         ),
       ),
     );

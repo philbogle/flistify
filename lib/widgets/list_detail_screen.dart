@@ -31,7 +31,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   List<Subitem> _subitems = [];
   String? _newlyAddedSubitemId;
   bool _isReturningFromPicker = false;
-  bool _isHeroEnabled = true;
 
   @override
   void initState() {
@@ -50,15 +49,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
         if (list.subitems.where((s) => s.title.isNotEmpty).isEmpty && list.subitems.where((s) => s.title.isEmpty).isEmpty) {
           _addNewSubitem();
         }
-      }
-    });
-
-    // Disable the Hero animation after the transition is likely complete.
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        setState(() {
-          _isHeroEnabled = false;
-        });
       }
     });
   }
@@ -338,17 +328,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
           return child;
         }
 
-        if (_isHeroEnabled) {
-          return Hero(
-            tag: 'list_card_${list.id}',
-            child: Material(
-              type: MaterialType.transparency,
-              child: child,
-            ),
-          );
-        } else {
-          return child;
-        }
+        return child;
       },
     );
   }
