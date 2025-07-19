@@ -53,16 +53,25 @@ class _ListCardState extends State<ListCard> {
         BuildContext fromHeroContext,
         BuildContext toHeroContext,
       ) {
+        final Hero toHero = toHeroContext.widget as Hero;
+        final Material heroMaterial = toHero.child as Material;
+        final Card card = heroMaterial.child as Card;
+
         return Material(
-          color: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(
+          type: MaterialType.transparency,
+          child: Card(
+            margin: card.margin,
+            clipBehavior: card.clipBehavior,
+            color: card.color,
+            elevation: card.elevation,
+            shape: RoundedRectangleBorder(
+              borderRadius: (card.shape as RoundedRectangleBorder?)?.borderRadius ?? BorderRadius.circular(12.0),
+              side: BorderSide(
                 color: Theme.of(flightContext).primaryColor,
                 width: 2.0,
               ),
             ),
-            child: toHeroContext.widget,
+            child: card.child,
           ),
         );
       },
