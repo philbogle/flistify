@@ -7,10 +7,11 @@ import 'package:listify_mobile/widgets/subtask_item.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:listify_mobile/widgets/confirm_delete_dialog.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
 import 'package:listify_mobile/widgets/dictate_list_dialog.dart';
 import 'package:listify_mobile/constants.dart';
 import 'package:listify_mobile/widgets/share_list_dialog.dart';
+import 'package:listify_mobile/widgets/take_picture_screen.dart';
 
 class ListDetailScreen extends StatefulWidget {
   final String listId;
@@ -445,16 +446,14 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   }
 
   void _scanAndAppendItems(ListModel list) async {
-    setState(() {
-      _isReturningFromPicker = true;
-    });
+    final cameras = await availableCameras();
+    final firstCamera = cameras.first;
 
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: 1280,
-      maxHeight: 1280,
-      imageQuality: 80,
+    final XFile? pickedFile = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TakePictureScreen(camera: firstCamera),
+      ),
     );
 
     if (pickedFile == null) {
