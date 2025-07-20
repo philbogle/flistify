@@ -1,1 +1,110 @@
-import 'package:flutter/material.dart';class HelpDialog extends StatelessWidget {  const HelpDialog({super.key});  @override  Widget build(BuildContext context) {    return AlertDialog(      title: const Text('Listify Help'),      content: SizedBox(        width: double.maxFinite,        child: ListView(          shrinkWrap: true,          children: const [            Text(              'Listify helps you create, manage, and share lists by scanning images, dictating or pasting text, and autogenerating items with AI.',            ),            SizedBox(height: 16),            _HelpSection(              icon: Icons.add_box_outlined,              title: 'Creating Lists Manually',              content:                  'Tap the "Add" button and select "Enter manually" to create a new list. You can name your list and add items directly.',            ),            _HelpSection(              icon: Icons.camera_alt_outlined,              title: 'Scanning Lists & Objects',              content:                  'Select "Scan" from the "Add" menu. Use your camera to take a picture of handwriting, printed text, or physical items. The AI will then create a list title and items based on the image content.',            ),            _HelpSection(              icon: Icons.keyboard_voice_outlined,              title: 'Dictate or Paste Text',              content:                  'Choose "Dictate or Paste" from the "Add" menu. Paste text or use your mobile device\'s keyboard dictation feature into the dialog. The AI will convert this text into a structured list.',            ),            _HelpSection(              icon: Icons.auto_awesome_outlined,              title: 'Autogenerating Items',              content:                  'Use the "Autogenerate" button on a list card or the "Autogenerate Items" menu option. The AI suggests new items based on the list\'s title and existing content.',            ),            _HelpSection(              icon: Icons.rule_outlined,              title: 'Managing Lists & Items',              content:                  '- Edit Titles: Long-press a list or item title to edit.\n'                  '- Complete: Use checkboxes to mark lists/items complete.\n'                  '- Delete: Use the three-dot menu for deletion.',            ),            ExpansionTile(              leading: Icon(Icons.info_outline),              title: Text('About'),              children: [                Padding(                  padding: EdgeInsets.all(16.0),                  child: Text(                    'Listify is a full-stack application built with modern technologies.\n\n'                    '- Frontend: Flutter\n'                    '- Backend & AI: Next.js, Genkit, Google Gemini\n'                    '- Data Storage: Firebase Firestore\n'                  ),                ),              ],            ),          ],        ),      ),      actions: [        TextButton(          onPressed: () => Navigator.of(context).pop(),          child: const Text('Close'),        ),      ],    );  }}class _HelpSection extends StatelessWidget {  final IconData icon;  final String title;  final String content;  const _HelpSection({    required this.icon,    required this.title,    required this.content,  });  @override  Widget build(BuildContext context) {    return Padding(      padding: const EdgeInsets.symmetric(vertical: 8.0),      child: Row(        crossAxisAlignment: CrossAxisAlignment.start,        children: [          Icon(icon, size: 24, color: Theme.of(context).primaryColor),          const SizedBox(width: 16),          Expanded(            child: Column(              crossAxisAlignment: CrossAxisAlignment.start,              children: [                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),                const SizedBox(height: 4),                Text(content),              ],            ),          ),        ],      ),    );  }}
+import 'package:flutter/material.dart';
+
+class HelpDialog extends StatelessWidget {
+  const HelpDialog({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Listify Help'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: ListView(
+          shrinkWrap: true,
+          children: const [
+            Text(
+              'Listify helps you create, manage, and share lists by scanning images, dictating or pasting text, and autogenerating items with AI.',
+            ),
+            SizedBox(height: 16),
+            _HelpSection(
+              icon: Icons.add_box_outlined,
+              title: 'Creating Lists Manually',
+              content:
+                  'Tap the "Add" button and select "Enter manually" to create a new list. You can name your list and add items directly.',
+            ),
+            _HelpSection(
+              icon: Icons.camera_alt_outlined,
+              title: 'Scanning Lists & Objects',
+              content:
+                  'Select "Scan" from the "Add" menu. Use your camera to take a picture of handwriting, printed text, or physical items. The AI will then create a list title and items based on the image content.',
+            ),
+            _HelpSection(
+              icon: Icons.keyboard_voice_outlined,
+              title: 'Dictate or Paste Text',
+              content:
+                  'Choose "Dictate or Paste" from the "Add" menu. Paste text or use your mobile device\'s keyboard dictation feature into the dialog. The AI will convert this text into a structured list.',
+            ),
+            _HelpSection(
+              icon: Icons.auto_awesome_outlined,
+              title: 'Autogenerating Items',
+              content:
+                  'Use the "Autogenerate" button on a list card or the "Autogenerate Items" menu option. The AI suggests new items based on the list\'s title and existing content.',
+            ),
+            _HelpSection(
+              icon: Icons.rule_outlined,
+              title: 'Managing Lists & Items',
+              content:
+                  '- Edit Titles: Long-press a list or item title to edit.\n'
+                  '- Complete: Use checkboxes to mark lists/items complete.\n'
+                  '- Delete: Use the three-dot menu for deletion.',
+            ),
+            ExpansionTile(
+              leading: Icon(Icons.info_outline),
+              title: Text('About'),
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                      'Listify is a full-stack application built with modern technologies.\n\n'
+                      '- Frontend: Flutter\n'
+                      '- Backend & AI: Next.js, Genkit, Google Gemini\n'
+                      '- Data Storage: Firebase Firestore\n'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Close'),
+        ),
+      ],
+    );
+  }
+}
+
+class _HelpSection extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String content;
+  const _HelpSection({
+    required this.icon,
+    required this.title,
+    required this.content,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 24, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Text(content),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
