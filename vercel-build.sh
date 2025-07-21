@@ -13,6 +13,9 @@ export PATH="$FLUTTER_DIR/bin:$PATH"
 # Run Flutter doctor to confirm installation
 flutter doctor
 
+# Generate firebase_options.dart
+flutterfire configure --yes
+
 # Build the Flutter web app
 flutter pub get
 flutter build web --release

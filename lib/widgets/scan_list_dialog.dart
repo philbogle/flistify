@@ -1,6 +1,5 @@
-
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ScanListDialog extends StatelessWidget {
   const ScanListDialog({super.key});
@@ -41,9 +40,4 @@ class ScanListDialog extends StatelessWidget {
       ],
     );
   }
-}
-
-enum ImageSource {
-  camera,
-  gallery,
 }
