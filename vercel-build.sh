@@ -14,7 +14,7 @@ export PATH="$FLUTTER_DIR/bin:$PATH"
 flutter doctor
 
 # Generate firebase_options.dart
-flutterfire configure --yes
+dart run flutterfire_cli:flutterfire configure --yes
 
 # Build the Flutter web app
 flutter pub get
