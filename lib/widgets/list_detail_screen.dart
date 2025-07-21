@@ -148,7 +148,28 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
 
         final child = Scaffold(
           appBar: AppBar(
-            title: Text(list.title, style: titleStyle),
+            title: _isEditing
+                ? TextField(
+                    controller: _titleController,
+                    focusNode: _titleFocusNode,
+                    autofocus: true,
+                    style: titleStyle,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Enter title',
+                    ),
+                    onSubmitted: (_) => _updateTitle(),
+                  )
+                : GestureDetector(
+                    onTap: () {
+                      if (mounted) {
+                        setState(() {
+                          _isEditing = true;
+                        });
+                      }
+                    },
+                    child: Text(list.title, style: titleStyle),
+                  ),
             actions: [
               PopupMenuButton<String>(
                 onSelected: (String result) async {
