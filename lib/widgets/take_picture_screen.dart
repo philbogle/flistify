@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class TakePictureScreen extends StatefulWidget {
   const TakePictureScreen({super.key});
@@ -68,18 +69,36 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
           }
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          try {
-            await _initializeControllerFuture;
-            final image = await _controller.takePicture();
-            if (!mounted) return;
-            Navigator.of(context).pop(image);
-          } catch (e) {
-            print(e);
-          }
-        },
-        child: const Icon(Icons.camera_alt),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () async {
+              try {
+                await _initializeControllerFuture;
+                final image = await _controller.takePicture();
+                if (!mounted) return;
+                Navigator.of(context).pop(image);
+              } catch (e) {
+                print(e);
+              }
+            },
+            heroTag: 'camera',
+            child: const Icon(Icons.camera_alt),
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            onPressed: () async {
+              final picker = ImagePicker();
+              final image = await picker.pickImage(source: ImageSource.gallery);
+              if (image != null && mounted) {
+                Navigator.of(context).pop(image);
+              }
+            },
+            heroTag: 'gallery',
+            child: const Icon(Icons.photo_library),
+          ),
+        ],
       ),
     );
   }
