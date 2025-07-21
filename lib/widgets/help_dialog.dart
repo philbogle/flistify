@@ -40,12 +40,10 @@ class HelpDialog extends StatelessWidget {
                   'Use the "Autogenerate" button on a list card or the "Autogenerate Items" menu option. The AI suggests new items based on the list\'s title and existing content.',
             ),
             _HelpSection(
-              icon: Icons.rule_outlined,
-              title: 'Managing Lists & Items',
+              icon: Icons.link,
+              title: 'URL Previews',
               content:
-                  '- Edit Titles: Long-press a list or item title to edit.\n'
-                  '- Complete: Use checkboxes to mark lists/items complete.\n'
-                  '- Delete: Use the three-dot menu for deletion.',
+                  'When you add a URL to a list item, a preview of the link will be automatically generated, showing the title, description, and an image from the website.',
             ),
             ExpansionTile(
               leading: Icon(Icons.info_outline),

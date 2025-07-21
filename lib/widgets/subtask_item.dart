@@ -201,35 +201,11 @@ class _SubtaskItemState extends State<SubtaskItem> {
         value: _optimisticCompleted,
         onChanged: _handleCheckboxChanged,
       ),
-      title: _isEditing
-          ? TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              decoration: const InputDecoration(hintText: 'Add item'),
-              onSubmitted: (_) => _updateSubitem(),
-            )
-          : GestureDetector(
-              onTap: () {
-                final url = _extractUrl(widget.subitem.title);
-                if (url != null) {
-                  launchUrl(Uri.parse(url));
-                } else {
-                  setState(() {
-                    _isEditing = true;
-                    _focusNode.requestFocus();
-                  });
-                }
-              },
-              child: Text(
-                _controller.text, // Use the controller's text for optimistic updates
-                style: TextStyle(
-                  decoration: _optimisticCompleted ? TextDecoration.lineThrough : null,
-                  color: _optimisticCompleted ? Colors.grey : null,
-                ),
-              ),
-            ),
-      subtitle: _linkPreview != null
-          ? Card(
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_linkPreview != null) ...[
+            Card(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
@@ -244,10 +220,39 @@ class _SubtaskItemState extends State<SubtaskItem> {
                   ],
                 ),
               ),
-            )
-          : _isLoadingPreview
-              ? const LinearProgressIndicator()
-              : null,
+            ),
+            const SizedBox(height: 8),
+          ],
+          _isEditing
+              ? TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  decoration: const InputDecoration(hintText: 'Add item'),
+                  onSubmitted: (_) => _updateSubitem(),
+                )
+              : GestureDetector(
+                  onTap: () {
+                    final url = _extractUrl(widget.subitem.title);
+                    if (url != null) {
+                      launchUrl(Uri.parse(url));
+                    } else {
+                      setState(() {
+                        _isEditing = true;
+                        _focusNode.requestFocus();
+                      });
+                    }
+                  },
+                  child: Text(
+                    _controller.text,
+                    style: TextStyle(
+                      decoration: _optimisticCompleted ? TextDecoration.lineThrough : null,
+                      color: _optimisticCompleted ? Colors.grey : null,
+                    ),
+                  ),
+                ),
+        ],
+      ),
+      subtitle: _isLoadingPreview ? const LinearProgressIndicator() : null,
       trailing: _isEditing
           ? Row(
               mainAxisSize: MainAxisSize.min,

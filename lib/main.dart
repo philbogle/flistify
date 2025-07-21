@@ -8,12 +8,13 @@ import 'firebase_options.dart';
 import 'models/list.dart';
 import 'widgets/list_card.dart';
 import 'widgets/list_detail_screen.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'widgets/app_drawer.dart';
 import 'widgets/manual_add_list.dart';
 import 'widgets/scan_list_dialog.dart';
+import 'widgets/take_picture_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -199,23 +200,22 @@ class _ListPageState extends State<ListPage> {
     }
   }
 
-  Future<void> _scanAndCreateList(ImageSource source) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: source,
-      maxWidth: 1280,
-      maxHeight: 1280,
-      imageQuality: 80,
+  Future<void> _scanAndCreateList() async {
+    final XFile? image = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TakePictureScreen(),
+      ),
     );
 
-    if (pickedFile == null) return;
+    if (image == null) return;
 
     setState(() {
       _isScanning = true;
     });
 
     try {
-      final bytes = await pickedFile.readAsBytes();
+      final bytes = await image.readAsBytes();
       final base64Image = base64Encode(bytes);
       final imageDataUri = 'data:image/jpeg;base64,$base64Image';
 
@@ -411,17 +411,7 @@ class _ListPageState extends State<ListPage> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
-            onPressed: () async {
-              final ImageSource? source = await showDialog<ImageSource>(
-                context: context,
-                builder: (BuildContext context) {
-                  return const ScanListDialog();
-                },
-              );
-              if (source != null) {
-                _scanAndCreateList(source);
-              }
-            },
+            onPressed: _scanAndCreateList,
             heroTag: 'scan',
             child: const Icon(Icons.camera_alt),
           ),

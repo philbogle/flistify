@@ -1,28 +1,33 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 class TakePictureScreen extends StatefulWidget {
-  final CameraDescription camera;
-
-  const TakePictureScreen({super.key, required this.camera});
+  const TakePictureScreen({super.key});
 
   @override
-  TakePictureScreenState createState() => TakePictureScreenState();
+  State<TakePictureScreen> createState() => _TakePictureScreenState();
 }
 
-class TakePictureScreenState extends State<TakePictureScreen> {
+class _TakePictureScreenState extends State<TakePictureScreen> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
 
   @override
   void initState() {
     super.initState();
-    _controller = CameraController(
-      widget.camera,
-      ResolutionPreset.medium,
-    );
-
-    _initializeControllerFuture = _controller.initialize();
+    _initializeControllerFuture = availableCameras().then((cameras) {
+      if (cameras.isEmpty) {
+        throw Exception('No cameras found.');
+      }
+      _controller = CameraController(
+        cameras.first,
+        ResolutionPreset.medium,
+      );
+      return _controller.initialize();
+    });
   }
 
   @override
@@ -39,7 +44,25 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            return CameraPreview(_controller);
+            return Stack(
+              children: [
+                CameraPreview(_controller),
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Container(
+                    padding: const EdgeInsets.all(16.0),
+                    color: Colors.black.withOpacity(0.5),
+                    child: const Text(
+                      'Take a picture of text, handwriting, or objects to recognize them as a list',
+                      style: TextStyle(color: Colors.white, fontSize: 18.0),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
           } else {
             return const Center(child: CircularProgressIndicator());
           }
@@ -49,10 +72,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         onPressed: () async {
           try {
             await _initializeControllerFuture;
-
             final image = await _controller.takePicture();
-
-            Navigator.pop(context, image);
+            if (!mounted) return;
+            Navigator.of(context).pop(image);
           } catch (e) {
             print(e);
           }

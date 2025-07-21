@@ -1,4 +1,4 @@
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/list.dart';
@@ -7,10 +7,11 @@ import 'package:listify_mobile/widgets/subtask_item.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:listify_mobile/widgets/confirm_delete_dialog.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
 import 'package:listify_mobile/widgets/dictate_list_dialog.dart';
 import 'package:listify_mobile/constants.dart';
 import 'package:listify_mobile/widgets/share_list_dialog.dart';
+import 'package:listify_mobile/widgets/take_picture_screen.dart';
 
 class ListDetailScreen extends StatefulWidget {
   final String listId;
@@ -466,31 +467,29 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   }
 
   void _scanAndAppendItems(ListModel list) async {
-    setState(() {
-      _isReturningFromPicker = true;
-    });
-
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: 1280,
-      maxHeight: 1280,
-      imageQuality: 80,
-    );
-
-    if (pickedFile == null) {
-      setState(() {
-        _isReturningFromPicker = false;
-      });
+    final cameras = await availableCameras();
+    if (cameras.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No cameras found.')),
+      );
       return;
     }
+    final firstCamera = cameras.first;
+
+    final XFile? image = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => TakePictureScreen(),
+      ),
+    );
+
+    if (image == null) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Recognizing list...')),
     );
 
     try {
-      final bytes = await pickedFile.readAsBytes();
+      final bytes = await image.readAsBytes();
       final base64Image = base64Encode(bytes);
       final imageDataUri = 'data:image/jpeg;base64,$base64Image';
 
