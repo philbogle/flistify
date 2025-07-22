@@ -32,13 +32,17 @@ echo "Firebase CLI installed."
 
 # --- 3. Authenticate Firebase CLI using the CI token ---
 # This is the crucial step for CI/CD environments.
+# We will explicitly use the project ID instead of 'default'.
+FIREBASE_PROJECT_ID="taskflow-t95zd" # Define your Firebase Project ID here
+
 if [ -z "$FIREBASE_TOKEN" ]; then
   echo "Error: FIREBASE_TOKEN environment variable is not set."
   echo "Please generate a Firebase CI token (firebase login:ci) and add it to Vercel project environment variables."
   exit 1
 else
-  echo "Authenticating Firebase CLI with provided token..."
-  firebase use --token "$FIREBASE_TOKEN" default # Use 'default' or your project alias if you have one
+  echo "Authenticating Firebase CLI with provided token for project $FIREBASE_PROJECT_ID..."
+  # Use the explicit project ID for authentication
+  firebase use --token "$FIREBASE_TOKEN" "$FIREBASE_PROJECT_ID"
   echo "Firebase CLI authenticated."
 fi
 
@@ -55,7 +59,7 @@ echo "Dart pub cache added to PATH."
 # --- 5. Generate firebase_options.dart ---
 echo "Generating firebase_options.dart using flutterfire_cli..."
 dart run flutterfire_cli:flutterfire configure \
-  --project=taskflow-t95zd \
+  --project="$FIREBASE_PROJECT_ID" \
   --platforms=web \
   --yes # Automatically answer yes to prompts
 echo "firebase_options.dart generated."
