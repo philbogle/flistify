@@ -11,7 +11,7 @@ class ShareListDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shareLink = '$baseUrl/share/${list.shareId}';
+    final shareLink = '$webClientBaseUrl/share/${list.shareId}';
     return AlertDialog(
       title: const Text('Share List'),
       content: Column(

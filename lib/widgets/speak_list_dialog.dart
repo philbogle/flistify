@@ -82,7 +82,7 @@ class _SpeakListDialogState extends State<SpeakListDialog> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://studio-ten-black.vercel.app/api/extractFromText'),
+        Uri.parse('$backendBaseUrl/api/extractFromText'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'dictatedText': _transcript.trim()}),
       );

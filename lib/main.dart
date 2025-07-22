@@ -15,6 +15,7 @@ import 'widgets/app_drawer.dart';
 import 'widgets/manual_add_list.dart';
 import 'widgets/scan_list_dialog.dart';
 import 'widgets/take_picture_screen.dart';
+import 'constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -220,7 +221,7 @@ class _ListPageState extends State<ListPage> {
       final imageDataUri = 'data:image/jpeg;base64,$base64Image';
 
       final response = await http.post(
-        Uri.parse('https://studio-ten-black.vercel.app/api/extractFromImage'),
+        Uri.parse('$backendBaseUrl/api/extractFromImage'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'imageDataUri': imageDataUri}),
       );

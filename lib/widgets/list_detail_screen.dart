@@ -384,7 +384,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/generateSubitems'),
+        Uri.parse('$backendBaseUrl/api/generateSubitems'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
@@ -436,7 +436,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/autosortListItems'),
+        Uri.parse('$backendBaseUrl/api/autosortListItems'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
@@ -494,7 +494,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
       final imageDataUri = 'data:image/jpeg;base64,$base64Image';
 
       final response = await http.post(
-        Uri.parse('$baseUrl/api/extractFromImage'),
+        Uri.parse('$backendBaseUrl/api/extractFromImage'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'imageDataUri': imageDataUri}),
       );

@@ -32,7 +32,7 @@ class _DictateListDialogState extends State<DictateListDialog> {
 
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/extractFromText'),
+        Uri.parse('$backendBaseUrl/api/extractFromText'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'dictatedText': _controller.text.trim()}),
       );
