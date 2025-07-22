@@ -30,19 +30,29 @@ echo "Installing Firebase CLI globally..."
 npm install -g firebase-tools
 echo "Firebase CLI installed."
 
-# --- 3. Activate FlutterFire CLI ---
+# --- 3. Authenticate Firebase CLI using the CI token ---
+# This is the crucial step for CI/CD environments.
+if [ -z "$FIREBASE_TOKEN" ]; then
+  echo "Error: FIREBASE_TOKEN environment variable is not set."
+  echo "Please generate a Firebase CI token (firebase login:ci) and add it to Vercel project environment variables."
+  exit 1
+else
+  echo "Authenticating Firebase CLI with provided token..."
+  firebase use --token "$FIREBASE_TOKEN" default # Use 'default' or your project alias if you have one
+  echo "Firebase CLI authenticated."
+fi
+
+
+# --- 4. Activate FlutterFire CLI ---
 echo "Activating FlutterFire CLI globally..."
 dart pub global activate flutterfire_cli
 echo "FlutterFire CLI activated."
 
 # Add the Dart pub cache bin directory to PATH for the current shell session
-# This makes `flutterfire` directly callable, though we'll use `dart run` for robustness.
 export PATH="$PATH:$HOME/.pub-cache/bin"
 echo "Dart pub cache added to PATH."
 
-# --- 4. Generate firebase_options.dart ---
-# Use `dart run` to explicitly execute flutterfire_cli from the pub cache.
-# This is more reliable in CI environments than a direct `flutterfire` call.
+# --- 5. Generate firebase_options.dart ---
 echo "Generating firebase_options.dart using flutterfire_cli..."
 dart run flutterfire_cli:flutterfire configure \
   --project=taskflow-t95zd \
@@ -50,7 +60,7 @@ dart run flutterfire_cli:flutterfire configure \
   --yes # Automatically answer yes to prompts
 echo "firebase_options.dart generated."
 
-# --- 5. Build the Flutter web app ---
+# --- 6. Build the Flutter web app ---
 echo "Getting Flutter package dependencies..."
 flutter pub get
 echo "Building Flutter web app for release..."
