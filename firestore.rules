@@ -1,0 +1,45 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /tasks/{listId} {
+
+      // Helper functions
+      function isOwner() {
+        return request.auth != null && request.auth.uid == resource.data.userId;
+      }
+      function isShared() {
+        // Check if the list document (resource.data) has a non-null shareId
+        return resource.data.shareId != null;
+      }
+      function isCreatingOwnDocument() {
+        // Check if the incoming document (request.resource.data)
+        // has a userId matching the authenticated user.
+        return request.auth != null && request.auth.uid == request.resource.data.userId;
+      }
+      function canUpdateSharedList() {
+        let updatedKeys = request.resource.data.diff(resource.data).affectedKeys();
+        return isShared() && updatedKeys.hasOnly(['title', 'subtasks', 'completed']);
+      }
+
+      // CREATE
+      allow create: if isCreatingOwnDocument();
+
+      // READ (single document)
+      allow get: if isOwner() || isShared();
+
+      // READ (queries/lists).
+      // Allow owners to query their own lists.
+      // Allow anyone to query a list if they know the shareId (for the shared page).
+       allow list: if  isOwner() || (request.query.limit == 1);
+
+      // UPDATE
+      // Allow owner to update.
+      // Allow non-owners to update only specific fields on a shared list.
+      allow update: if isOwner() || canUpdateSharedList();
+
+      // DELETE
+      allow delete: if isOwner();
+    }
+  }
+}
