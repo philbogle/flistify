@@ -37,16 +37,12 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      onGenerateRoute: (settings) {
-        if (settings.name != null && settings.name!.startsWith('/share/')) {
-          final shareId = settings.name!.split('/').last;
-          return MaterialPageRoute(
-            builder: (context) => ShareScreen(shareId: shareId),
-          );
-        }
-        return MaterialPageRoute(builder: (context) => const AuthGate());
-      },
-      home: const AuthGate(),
+      home: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: const AuthGate(),
+        ),
+      ),
     );
   }
 }
@@ -56,85 +52,100 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        if (!snapshot.hasData) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Welcome to Listify'),
-            ),
-            body: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Spacer(),
-                  const Text(
-                    'Your intelligent list-making companion',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 40),
-                  const FeatureHighlight(
-                    icon: Icons.check_circle_outline,
-                    title: 'Effortless Lists',
-                    description: 'Quickly create and manage all of your to-do lists, shopping lists, and more.',
-                  ),
-                  const FeatureHighlight(
-                    icon: Icons.camera_alt_outlined,
-                    title: 'Scan from Camera',
-                    description: 'Instantly turn photos of handwritten notes or objects into digital lists.',
-                  ),
-                  const FeatureHighlight(
-                    icon: Icons.auto_awesome_outlined,
-                    title: 'AI-Powered Actions',
-                    description: 'Let artificial intelligence automatically sort your lists and suggest new items.',
-                  ),
-                  const Spacer(),
-                  ElevatedButton(
-                    onPressed: () async {
-                      try {
-                        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    final uri = Uri.base;
+    Widget page;
 
-                        if (googleUser == null) {
-                          // User cancelled the sign-in
-                          return;
-                        }
-
-                        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-                        final AuthCredential credential = GoogleAuthProvider.credential(
-                          accessToken: googleAuth.accessToken,
-                          idToken: googleAuth.idToken,
-                        );
-                        await FirebaseAuth.instance.signInWithCredential(credential);
-                      } catch (e) {
-                        print('Failed to sign in with Google: $e');
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Failed to sign in with Google: $e'),
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                    child: const Text('Sign in with Google', style: TextStyle(fontSize: 18)),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+    if (uri.pathSegments.isNotEmpty && uri.pathSegments.first == 'share') {
+      final shareId = uri.pathSegments.last;
+      page = ShareScreen(shareId: shareId);
+    } else {
+      page = StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          if (!snapshot.hasData) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Welcome to Listify'),
               ),
-            ),
-          );
-        }
-        return const ListPage();
-      },
+              body: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Spacer(),
+                    const Text(
+                      'Your intelligent list-making companion',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 40),
+                    const FeatureHighlight(
+                      icon: Icons.check_circle_outline,
+                      title: 'Effortless Lists',
+                      description: 'Quickly create and manage all of your to-do lists, shopping lists, and more.',
+                    ),
+                    const FeatureHighlight(
+                      icon: Icons.camera_alt_outlined,
+                      title: 'Scan from Camera',
+                      description: 'Instantly turn photos of handwritten notes or objects into digital lists.',
+                    ),
+                    const FeatureHighlight(
+                      icon: Icons.auto_awesome_outlined,
+                      title: 'AI-Powered Actions',
+                      description: 'Let artificial intelligence automatically sort your lists and suggest new items.',
+                    ),
+                    const Spacer(),
+                    ElevatedButton(
+                      onPressed: () async {
+                        try {
+                          final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+                          if (googleUser == null) {
+                            // User cancelled the sign-in
+                            return;
+                          }
+
+                          final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+                          final AuthCredential credential = GoogleAuthProvider.credential(
+                            accessToken: googleAuth.accessToken,
+                            idToken: googleAuth.idToken,
+                          );
+                          await FirebaseAuth.instance.signInWithCredential(credential);
+                        } catch (e) {
+                          print('Failed to sign in with Google: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to sign in with Google: $e'),
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                      child: const Text('Sign in with Google', style: TextStyle(fontSize: 18)),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            );
+          }
+          return const ListPage();
+        },
+      );
+    }
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900),
+        child: page,
+      ),
     );
   }
 }

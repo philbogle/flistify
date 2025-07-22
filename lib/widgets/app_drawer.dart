@@ -9,12 +9,13 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final bool isAnonymous = user?.isAnonymous ?? true;
 
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          if (user != null)
+          if (user != null && !isAnonymous)
             UserAccountsDrawerHeader(
               accountName: Text(user.displayName ?? 'User'),
               accountEmail: Text(user.email ?? ''),
@@ -44,15 +45,17 @@ class AppDrawer extends StatelessWidget {
               );
             },
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Sign Out'),
-            onTap: () {
-              Navigator.pop(context); // Close the drawer
-              FirebaseAuth.instance.signOut();
-            },
-          ),
+          if (user != null && !isAnonymous) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Sign Out'),
+              onTap: () {
+                Navigator.pop(context); // Close the drawer
+                FirebaseAuth.instance.signOut();
+              },
+            ),
+          ]
         ],
       ),
     );
