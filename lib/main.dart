@@ -78,13 +78,6 @@ class AuthGate extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Spacer(),
-                    const Text(
-                      'Your intelligent list-making companion',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 40),
                     const FeatureHighlight(
                       icon: Icons.check_circle_outline,
                       title: 'Effortless Lists',
