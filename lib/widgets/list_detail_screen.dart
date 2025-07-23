@@ -99,7 +99,10 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     });
   }
 
-  void _deleteSubitem(int index) {
+  void _deleteSubitem(String subitemId) {
+    final index = _subitems.indexWhere((s) => s.id == subitemId);
+    if (index == -1) return;
+
     final removedItem = _subitems.removeAt(index);
     final listRef = FirebaseFirestore.instance.collection('tasks').doc(widget.listId);
 
@@ -377,7 +380,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                 subitem: subitem,
                 listId: list.id,
                 startInEditMode: isNew,
-                onDelete: () => _deleteSubitem(index),
+                onDelete: () => _deleteSubitem(subitem.id),
                 onSubmitted: () {
                   if (isNew) {
                     _addNewSubitem();

@@ -105,6 +105,11 @@ class _SubtaskItemState extends State<SubtaskItem> {
   }
 
   void _updateSubitem() {
+    if (_controller.text.isEmpty) {
+      widget.onDelete?.call();
+      return;
+    }
+
     if (_controller.text == widget.subitem.title) {
         if (mounted) setState(() => _isEditing = false);
         return; // No change, no need to update
