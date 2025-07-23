@@ -45,6 +45,31 @@ class HelpDialog extends StatelessWidget {
               content:
                   'When you add a URL to a list item, a preview of the link will be automatically generated, showing the title, description, and an image from the website.',
             ),
+            _HelpSection(
+              icon: Icons.touch_app,
+              title: 'Tapping Behavior',
+              content:
+                  'On the main screen, tapping a list\'s title will navigate to its detail screen. Tapping a sub-item\'s title will toggle its completed state. On the list detail screen, tapping an item\'s title will also toggle its completed state.',
+            ),
+            ExpansionTile(
+              leading: Icon(Icons.info_outline),
+              title: Text('List Detail Page Actions'),
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                      'On the list detail page, you can perform the following actions:\n\n'
+                      '- Mark Complete: Mark the entire list as complete.\n'
+                      '- Autogenerate Items: Automatically generate new items based on the list\'s title and existing content.\n'
+                      '- Autosort Items: Automatically sort the items in the list.\n'
+                      '- Scan More Items: Scan another image and add the items to the current list.\n'
+                      '- Dictate or Paste: Add items to the list by dictating or pasting text.\n'
+                      '- Share List: Share the list with others.\n'
+                      '- Delete Completed Items: Remove all completed items from the list.\n'
+                      '- Delete List: Delete the entire list.'),
+                ),
+              ],
+            ),
             ExpansionTile(
               leading: Icon(Icons.info_outline),
               title: Text('About'),

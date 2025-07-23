@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/widgets/list_detail_screen.dart';
+import 'package:listify_mobile/widgets/share_drawer.dart';
 
 class ShareScreen extends StatefulWidget {
   final String shareId;
@@ -56,8 +57,12 @@ class _ShareScreenState extends State<ShareScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Shared List'),
+      ),
+      drawer: const ShareDrawer(),
+      body: const Center(child: CircularProgressIndicator()),
     );
   }
 }
