@@ -26,7 +26,13 @@ class TaskCard extends StatelessWidget {
             }
           },
         ),
-        title: Text(task.title),
+        title: GestureDetector(
+          onTap: () {
+            // This will likely fail if the document path is incorrect.
+            // We will need to read the main.dart file to understand the correct path.
+          },
+          child: Text(task.title),
+        ),
         trailing: PopupMenuButton<String>(
           onSelected: (String result) {
             // Handle menu actions here

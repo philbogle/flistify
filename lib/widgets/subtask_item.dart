@@ -231,22 +231,25 @@ class _SubtaskItemState extends State<SubtaskItem> {
                   onSubmitted: (_) => _updateSubitem(),
                 )
               : GestureDetector(
-                  onTap: () {
-                    final url = _extractUrl(widget.subitem.title);
-                    if (url != null) {
-                      launchUrl(Uri.parse(url));
-                    } else {
-                      setState(() {
-                        _isEditing = true;
-                        _focusNode.requestFocus();
-                      });
-                    }
-                  },
-                  child: Text(
-                    _controller.text,
-                    style: TextStyle(
-                      decoration: _optimisticCompleted ? TextDecoration.lineThrough : null,
-                      color: _optimisticCompleted ? Colors.grey : null,
+                  onTap: () => _handleCheckboxChanged(!_optimisticCompleted),
+                  child: GestureDetector(
+                    onTap: () {
+                      final url = _extractUrl(widget.subitem.title);
+                      if (url != null) {
+                        launchUrl(Uri.parse(url));
+                      } else {
+                        setState(() {
+                          _isEditing = true;
+                          _focusNode.requestFocus();
+                        });
+                      }
+                    },
+                    child: Text(
+                      _controller.text,
+                      style: TextStyle(
+                        decoration: _optimisticCompleted ? TextDecoration.lineThrough : null,
+                        color: _optimisticCompleted ? Colors.grey : null,
+                      ),
                     ),
                   ),
                 ),

@@ -73,11 +73,14 @@ class _ReadOnlySubtaskItemState extends State<ReadOnlySubtaskItem> {
         value: _optimisticCompleted,
         onChanged: _handleCheckboxChanged,
       ),
-      title: Text(
-        widget.subitem.title,
-        style: TextStyle(
-          decoration: _optimisticCompleted ? TextDecoration.lineThrough : null,
-          color: _optimisticCompleted ? Colors.grey : null,
+      title: GestureDetector(
+        onTap: () => _handleCheckboxChanged(!_optimisticCompleted),
+        child: Text(
+          widget.subitem.title,
+          style: TextStyle(
+            decoration: _optimisticCompleted ? TextDecoration.lineThrough : null,
+            color: _optimisticCompleted ? Colors.grey : null,
+          ),
         ),
       ),
     );
