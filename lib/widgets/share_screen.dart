@@ -36,7 +36,7 @@ class _ShareScreenState extends State<ShareScreen> {
           final listId = querySnapshot.docs.first.id;
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => ListDetailScreen(listId: listId),
+              builder: (context) => ListDetailScreen(listId: listId, isShared: true),
             ),
           );
         } else {

@@ -93,12 +93,24 @@ class AuthGate extends StatelessWidget {
                     const FeatureHighlight(
                       icon: Icons.camera_alt_outlined,
                       title: 'Scan from Camera',
-                      description: 'Instantly turn photos of handwritten notes or objects into digital lists.',
+                      description: 'Instantly turn photos of printed text, handwriting, or objects into digital lists.',
                     ),
                     const FeatureHighlight(
                       icon: Icons.auto_awesome_outlined,
                       title: 'AI-Powered Actions',
                       description: 'Let artificial intelligence automatically sort your lists and suggest new items.',
+                    ),
+                    const SizedBox(height: 20),
+                    const FeatureHighlight(
+                      icon: Icons.share,
+                      title: 'List Sharing & Collaboration',
+                      description: 'Share your lists with others and edit them together in real-time.',
+                    ),
+                    const SizedBox(height: 20),
+                    const FeatureHighlight(
+                      icon: Icons.devices,
+                      title: 'Cross-Device Access',
+                      description: 'Sign in to access your lists across all of your devices.',
                     ),
                     const Spacer(),
                     ElevatedButton(

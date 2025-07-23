@@ -26,6 +26,7 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
       _controller = CameraController(
         cameras.first,
         ResolutionPreset.medium,
+        enableAudio: false,
       );
       return _controller.initialize();
     });

@@ -78,16 +78,8 @@ class _ReadOnlySubtaskItemState extends State<ReadOnlySubtaskItem> {
                 ListDetailScreen(listId: widget.listId),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              return ScaleTransition(
-                scale: Tween<double>(
-                  begin: 0.8,
-                  end: 1.0,
-                ).animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.fastOutSlowIn,
-                  ),
-                ),
+              return FadeTransition(
+                opacity: animation,
                 child: child,
               );
             },

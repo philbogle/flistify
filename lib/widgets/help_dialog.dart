@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HelpDialog extends StatelessWidget {
   const HelpDialog({super.key});
@@ -10,67 +13,94 @@ class HelpDialog extends StatelessWidget {
         width: double.maxFinite,
         child: ListView(
           shrinkWrap: true,
-          children: const [
-            Text(
+          children: [
+            const Text(
               'Listify helps you create, manage, and share lists by scanning images, dictating or pasting text, and autogenerating items with AI.',
             ),
-            SizedBox(height: 16),
-            _HelpSection(
+            const SizedBox(height: 16),
+            const _HelpSection(
               icon: Icons.add_box_outlined,
               title: 'Creating Lists Manually',
               content:
                   'Tap the "Add" button and select "Enter manually" to create a new list. You can name your list and add items directly.',
             ),
-            _HelpSection(
+            const _HelpSection(
               icon: Icons.camera_alt_outlined,
               title: 'Scanning Lists & Objects',
               content:
                   'Select "Scan" from the "Add" menu. Use your camera to take a picture of handwriting, printed text, or physical items. The AI will then create a list title and items based on the image content.',
             ),
-            _HelpSection(
+            const _HelpSection(
               icon: Icons.keyboard_voice_outlined,
               title: 'Dictate or Paste Text',
               content:
                   'Choose "Dictate or Paste" from the "Add" menu. Paste text or use your mobile device\'s keyboard dictation feature into the dialog. The AI will convert this text into a structured list.',
             ),
-            _HelpSection(
+            const _HelpSection(
               icon: Icons.auto_awesome_outlined,
               title: 'Autogenerating Items',
               content:
                   'Use the "Autogenerate" button on a list card or the "Autogenerate Items" menu option. The AI suggests new items based on the list\'s title and existing content.',
             ),
-            _HelpSection(
+            const _HelpSection(
               icon: Icons.link,
               title: 'URL Previews',
               content:
                   'When you add a URL to a list item, a preview of the link will be automatically generated, showing the title, description, and an image from the website.',
             ),
-            _HelpSection(
+            const _HelpSection(
               icon: Icons.touch_app,
               title: 'Tapping Behavior',
               content:
-                  'On the main screen, tapping a list\'s title will navigate to its detail screen. Tapping a sub-item\'s title will toggle its completed state. On the list detail screen, tapping an item\'s title will also toggle its completed state.',
+                  'On the main screen, tapping a list\'s title or a sub-item will navigate to its detail screen. On the list detail screen, tapping the list title or an item will allow you to edit it. Changes are saved automatically when the field loses focus.',
             ),
-            ExpansionTile(
+            const ExpansionTile(
               leading: Icon(Icons.info_outline),
               title: Text('List Detail Page Actions'),
               children: [
-                Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text(
-                      'On the list detail page, you can perform the following actions:\n\n'
-                      '- Mark Complete: Mark the entire list as complete.\n'
-                      '- Autogenerate Items: Automatically generate new items based on the list\'s title and existing content.\n'
-                      '- Autosort Items: Automatically sort the items in the list.\n'
-                      '- Scan More Items: Scan another image and add the items to the current list.\n'
-                      '- Dictate or Paste: Add items to the list by dictating or pasting text.\n'
-                      '- Share List: Share the list with others.\n'
-                      '- Delete Completed Items: Remove all completed items from the list.\n'
-                      '- Delete List: Delete the entire list.'),
-                ),
+                _HelpSection(icon: Icons.check, title: 'Mark Complete', content: 'Mark the entire list as complete.'),
+                _HelpSection(icon: Icons.auto_awesome_outlined, title: 'Autogenerate Items', content: 'Automatically generate new items based on the list\'s title and existing content.'),
+                _HelpSection(icon: Icons.sort, title: 'Autosort Items', content: 'Automatically sort the items in the list.'),
+                _HelpSection(icon: Icons.camera_alt_outlined, title: 'Scan More Items', content: 'Scan another image and add the items to the current list.'),
+                _HelpSection(icon: Icons.mic_none, title: 'Dictate or Paste', content: 'Add items to the list by dictating or pasting text.'),
+                _HelpSection(icon: Icons.share, title: 'Share List', content: 'Share the list with others.'),
+                _HelpSection(icon: Icons.check_circle_outline, title: 'Delete Completed Items', content: 'Remove all completed items from the list.'),
+                _HelpSection(icon: Icons.delete_outline, title: 'Delete List', content: 'Delete the entire list.'),
               ],
             ),
-            ExpansionTile(
+            if (kIsWeb)
+              ExpansionTile(
+                leading: const Icon(Icons.android),
+                title: const Text('Android App Available'),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          const TextSpan(
+                            text: 'A native Android app is available with additional features and better performance. We are looking for testers! Please contact ',
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          TextSpan(
+                            text: 'philbogle@gmail.com',
+                            style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                launchUrl(Uri.parse('mailto:philbogle@gmail.com'));
+                              },
+                          ),
+                          const TextSpan(
+                            text: ' for details.',
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            const ExpansionTile(
               leading: Icon(Icons.info_outline),
               title: Text('About'),
               children: [
@@ -96,6 +126,7 @@ class HelpDialog extends StatelessWidget {
     );
   }
 }
+
 
 class _HelpSection extends StatelessWidget {
   final IconData icon;

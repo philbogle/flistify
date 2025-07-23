@@ -56,16 +56,8 @@ class _ListCardState extends State<ListCard> {
                   ListDetailScreen(listId: widget.list.id),
               transitionsBuilder:
                   (context, animation, secondaryAnimation, child) {
-                return ScaleTransition(
-                  scale: Tween<double>(
-                    begin: 0.8,
-                    end: 1.0,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.fastOutSlowIn,
-                    ),
-                  ),
+                return FadeTransition(
+                  opacity: animation,
                   child: child,
                 );
               },

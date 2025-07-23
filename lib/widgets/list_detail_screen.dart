@@ -12,11 +12,14 @@ import 'package:listify_mobile/widgets/dictate_list_dialog.dart';
 import 'package:listify_mobile/constants.dart';
 import 'package:listify_mobile/widgets/share_list_dialog.dart';
 import 'package:listify_mobile/widgets/take_picture_screen.dart';
+import 'package:listify_mobile/widgets/help_dialog.dart';
+import 'package:listify_mobile/widgets/share_drawer.dart';
 
 class ListDetailScreen extends StatefulWidget {
   final String listId;
+  final bool isShared;
 
-  const ListDetailScreen({super.key, required this.listId});
+  const ListDetailScreen({super.key, required this.listId, this.isShared = false});
 
   @override
   State<ListDetailScreen> createState() => _ListDetailScreenState();
@@ -148,6 +151,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
         }
 
         final child = Scaffold(
+          drawer: widget.isShared ? const ShareDrawer() : null,
           appBar: AppBar(
             title: GestureDetector(
               onTap: () {
@@ -173,7 +177,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                       ),
                       onSubmitted: (_) => _updateTitle(),
                     )
-                  : Text(list.title, style: titleStyle),
+                  : Text(widget.isShared ? 'Shared list: ${list.title}' : list.title, style: titleStyle),
             ),
             actions: [
               PopupMenuButton<String>(
@@ -241,6 +245,12 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                         'completed': true,
                       });
                       Navigator.of(context).pop();
+                      break;
+                    case 'help':
+                      showDialog(
+                        context: context,
+                        builder: (context) => const HelpDialog(),
+                      );
                       break;
                   }
                 },
@@ -326,6 +336,17 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                         Icon(Icons.delete_outline),
                         SizedBox(width: 8),
                         Text('Delete List'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem<String>(
+                    value: 'help',
+                    child: Row(
+                      children: [
+                        Icon(Icons.help_outline),
+                        SizedBox(width: 8),
+                        Text('Help'),
                       ],
                     ),
                   ),

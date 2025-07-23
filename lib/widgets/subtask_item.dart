@@ -169,21 +169,51 @@ class _SubtaskItemState extends State<SubtaskItem> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (_isLoadingPreview)
-            const ShimmerPlaceholder(height: 200)
+            const ShimmerPlaceholder(height: 100)
           else if (_linkPreview != null) ...[
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_linkPreview!['imageUrl']!.isNotEmpty)
-                      Image.network(_linkPreview!['imageUrl']!),
-                    if (_linkPreview!['title']!.isNotEmpty)
-                      Text(_linkPreview!['title']!, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    if (_linkPreview!['description']!.isNotEmpty)
-                      Text(_linkPreview!['description']!),
-                  ],
+            GestureDetector(
+              onTap: () {
+                final url = LinkUtils.extractUrl(widget.subitem.title);
+                if (url != null) {
+                  launchUrl(Uri.parse(url));
+                }
+              },
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_linkPreview!['imageUrl']!.isNotEmpty)
+                        Image.network(
+                          _linkPreview!['imageUrl']!,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_linkPreview!['title']!.isNotEmpty)
+                              Text(
+                                _linkPreview!['title']!,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            if (_linkPreview!['description']!.isNotEmpty)
+                              Text(
+                                _linkPreview!['description']!,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
