@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/subitem.dart';
-
 import 'package:listify_mobile/widgets/circular_checkbox.dart';
 import 'package:listify_mobile/widgets/rename_subitem_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
+import 'package:listify_mobile/widgets/link_utils.dart';
+import 'package:listify_mobile/widgets/shimmer_placeholder.dart';
 
 class SubtaskItem extends StatefulWidget {
   final Subitem subitem;
@@ -67,7 +68,7 @@ class _SubtaskItemState extends State<SubtaskItem> {
   }
 
   Future<void> _fetchLinkPreview() async {
-    final url = _extractUrl(widget.subitem.title);
+    final url = LinkUtils.extractUrl(widget.subitem.title);
     if (url != null) {
       setState(() {
         _isLoadingPreview = true;
@@ -94,12 +95,6 @@ class _SubtaskItemState extends State<SubtaskItem> {
         _isLoadingPreview = false;
       });
     }
-  }
-
-  String? _extractUrl(String text) {
-    final urlRegex = RegExp(r'https?://[^\s]+');
-    final match = urlRegex.firstMatch(text);
-    return match?.group(0);
   }
 
   @override
@@ -163,40 +158,9 @@ class _SubtaskItemState extends State<SubtaskItem> {
     });
   }
 
-  void _showMenu(BuildContext context) {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final RenderBox itemBox = context.findRenderObject() as RenderBox;
-    final Offset position = itemBox.localToGlobal(Offset.zero, ancestor: overlay);
-
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx + itemBox.size.width, position.dy + itemBox.size.height),
-      items: [
-        const PopupMenuItem(
-          value: 'edit',
-          child: Text('Edit'),
-        ),
-        const PopupMenuItem(
-          value: 'delete',
-          child: Text('Delete'),
-        ),
-      ],
-    ).then((value) {
-      if (value == 'edit') {
-        setState(() {
-          _isEditing = true;
-          _focusNode.requestFocus();
-        });
-      } else if (value == 'delete') {
-        widget.onDelete?.call();
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      onLongPress: () => _showMenu(context),
       leading: CircularCheckbox(
         value: _optimisticCompleted,
         onChanged: _handleCheckboxChanged,
@@ -204,7 +168,9 @@ class _SubtaskItemState extends State<SubtaskItem> {
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_linkPreview != null) ...[
+          if (_isLoadingPreview)
+            const ShimmerPlaceholder(height: 200)
+          else if (_linkPreview != null) ...[
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -231,53 +197,30 @@ class _SubtaskItemState extends State<SubtaskItem> {
                   onSubmitted: (_) => _updateSubitem(),
                 )
               : GestureDetector(
-                  onTap: () => _handleCheckboxChanged(!_optimisticCompleted),
-                  child: GestureDetector(
-                    onTap: () {
-                      final url = _extractUrl(widget.subitem.title);
-                      if (url != null) {
-                        launchUrl(Uri.parse(url));
-                      } else {
-                        setState(() {
-                          _isEditing = true;
-                          _focusNode.requestFocus();
-                        });
-                      }
-                    },
-                    child: Text(
-                      _controller.text,
-                      style: TextStyle(
-                        decoration: _optimisticCompleted ? TextDecoration.lineThrough : null,
-                        color: _optimisticCompleted ? Colors.grey : null,
-                      ),
-                    ),
+                  onTapDown: (details) {
+                    setState(() {
+                      _isEditing = true;
+                      _focusNode.requestFocus();
+                      _controller.selection = TextSelection(
+                        baseOffset: 0,
+                        extentOffset: _controller.text.length,
+                      );
+                    });
+                  },
+                  child: Text(
+                    LinkUtils.formatTitle(_controller.text),
+                    style: LinkUtils.getTextStyle(_controller.text, completed: _optimisticCompleted),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ),
         ],
       ),
       subtitle: _isLoadingPreview ? const LinearProgressIndicator() : null,
       trailing: _isEditing
-          ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.save),
-                  onPressed: _updateSubitem,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.cancel),
-                  onPressed: () {
-                    setState(() {
-                      _isEditing = false;
-                      _controller.text = widget.subitem.title; // Revert changes
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: widget.onDelete,
-                ),
-              ],
+          ? IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: widget.onDelete,
             )
           : null,
     );

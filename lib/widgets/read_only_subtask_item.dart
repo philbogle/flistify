@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/subitem.dart';
-
 import 'package:listify_mobile/widgets/circular_checkbox.dart';
+import 'package:listify_mobile/widgets/link_utils.dart';
+import 'package:listify_mobile/widgets/list_detail_screen.dart';
 
 class ReadOnlySubtaskItem extends StatefulWidget {
   final Subitem subitem;
@@ -69,19 +70,39 @@ class _ReadOnlySubtaskItemState extends State<ReadOnlySubtaskItem> {
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      onTap: () {
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                ListDetailScreen(listId: widget.listId),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              return ScaleTransition(
+                scale: Tween<double>(
+                  begin: 0.8,
+                  end: 1.0,
+                ).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.fastOutSlowIn,
+                  ),
+                ),
+                child: child,
+              );
+            },
+          ),
+        );
+      },
       leading: CircularCheckbox(
         value: _optimisticCompleted,
         onChanged: _handleCheckboxChanged,
       ),
-      title: GestureDetector(
-        onTap: () => _handleCheckboxChanged(!_optimisticCompleted),
-        child: Text(
-          widget.subitem.title,
-          style: TextStyle(
-            decoration: _optimisticCompleted ? TextDecoration.lineThrough : null,
-            color: _optimisticCompleted ? Colors.grey : null,
-          ),
-        ),
+      title: Text(
+        LinkUtils.formatTitle(widget.subitem.title),
+        style: LinkUtils.getTextStyle(widget.subitem.title, completed: _optimisticCompleted),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
       ),
     );
   }
