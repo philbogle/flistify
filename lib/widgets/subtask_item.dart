@@ -237,11 +237,15 @@ class _SubtaskItemState extends State<SubtaskItem> {
                       );
                     });
                   },
-                  child: Text(
-                    LinkUtils.formatTitle(_controller.text),
-                    style: LinkUtils.getTextStyle(_controller.text, completed: _optimisticCompleted),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      LinkUtils.formatTitle(_controller.text),
+                      style: LinkUtils.getTextStyle(_controller.text, completed: _optimisticCompleted),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   ),
                 ),
         ],
