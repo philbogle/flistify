@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/subitem.dart';
 import 'package:listify_mobile/widgets/circular_checkbox.dart';
-import 'package:listify_mobile/widgets/rename_subitem_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;

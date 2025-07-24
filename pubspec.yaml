@@ -24,6 +24,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   shimmer: ^3.0.0
 
+  speech_to_text: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

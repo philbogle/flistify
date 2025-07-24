@@ -13,7 +13,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'widgets/app_drawer.dart';
 import 'widgets/manual_add_list.dart';
-import 'widgets/scan_list_dialog.dart';
 import 'widgets/take_picture_screen.dart';
 import 'widgets/share_screen.dart';
 import 'constants.dart';

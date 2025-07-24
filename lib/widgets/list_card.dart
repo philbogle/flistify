@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/list.dart';
 import 'package:listify_mobile/widgets/circular_checkbox.dart';
 import 'package:listify_mobile/widgets/list_detail_screen.dart';
 import 'package:listify_mobile/widgets/read_only_subtask_item.dart';
-import 'package:listify_mobile/widgets/share_list_dialog.dart';
 
 class ListCard extends StatefulWidget {
   final ListModel list;

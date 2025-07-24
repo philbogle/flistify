@@ -4,7 +4,6 @@ import 'package:listify_mobile/main.dart';
 
 import 'package:listify_mobile/widgets/help_dialog.dart';
 
-import 'package:google_sign_in/google_sign_in.dart';
 
 class ShareDrawer extends StatelessWidget {
   const ShareDrawer({super.key});
