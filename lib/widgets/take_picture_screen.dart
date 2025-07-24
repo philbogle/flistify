@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
 class TakePictureScreen extends StatefulWidget {
@@ -19,22 +20,28 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeControllerFuture = availableCameras().then((cameras) {
-      if (cameras.isEmpty) {
-        throw Exception('No cameras found.');
-      }
-      // Find the rear camera
-      final rearCamera = cameras.firstWhere(
-        (camera) => camera.lensDirection == CameraLensDirection.back,
-        orElse: () => cameras.first, // Fallback to the first camera if no rear camera is found
-      );
-      _controller = CameraController(
-        rearCamera,
-        ResolutionPreset.medium,
-        enableAudio: false,
-      );
-      return _controller.initialize();
-    });
+    _initializeControllerFuture = _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    final cameras = await availableCameras();
+    if (cameras.isEmpty) {
+      throw Exception('No cameras found.');
+    }
+    // Find the rear camera
+    final rearCamera = cameras.firstWhere(
+      (camera) => camera.lensDirection == CameraLensDirection.back,
+      orElse: () => cameras.first, // Fallback to the first camera if no rear camera is found
+    );
+    _controller = CameraController(
+      rearCamera,
+      ResolutionPreset.medium,
+      enableAudio: false,
+    );
+    await _controller.initialize();
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      await _controller.lockCaptureOrientation();
+    }
   }
 
   @override
@@ -51,28 +58,17 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            return Stack(
-              children: [
-                RotatedBox(
-                  quarterTurns: MediaQuery.of(context).orientation == Orientation.landscape ? 3 : 0,
-                  child: AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: CameraPreview(_controller),
-                  ),
+            // If the Future is complete, display the preview.
+            final size = MediaQuery.of(context).size;
+            final deviceRatio = size.width / size.height;
+            return Transform.scale(
+              scale: _controller.value.aspectRatio / deviceRatio,
+              child: Center(
+                child: AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: CameraPreview(_controller),
                 ),
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: Container(
-                    padding: const EdgeInsets.all(16.0),
-                    color: Colors.black.withOpacity(0.5),
-                    child: const Text(
-                      'Take a picture of text, handwriting, or objects to recognize them as a list',
-                      style: TextStyle(color: Colors.white, fontSize: 18.0),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             );
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
