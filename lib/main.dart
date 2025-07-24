@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
       ),
       home: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
+          constraints: const BoxConstraints(maxWidth: 600),
           child: const AuthGate(),
         ),
       ),
@@ -158,7 +158,7 @@ class AuthGate extends StatelessWidget {
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 900),
+        constraints: const BoxConstraints(maxWidth: 600),
         child: page,
       ),
     );
