@@ -23,8 +23,13 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
       if (cameras.isEmpty) {
         throw Exception('No cameras found.');
       }
+      // Find the rear camera
+      final rearCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first, // Fallback to the first camera if no rear camera is found
+      );
       _controller = CameraController(
-        cameras.first,
+        rearCamera,
         ResolutionPreset.medium,
         enableAudio: false,
       );
@@ -48,7 +53,13 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
           if (snapshot.connectionState == ConnectionState.done) {
             return Stack(
               children: [
-                CameraPreview(_controller),
+                RotatedBox(
+                  quarterTurns: MediaQuery.of(context).orientation == Orientation.landscape ? 3 : 0,
+                  child: AspectRatio(
+                    aspectRatio: _controller.value.aspectRatio,
+                    child: CameraPreview(_controller),
+                  ),
+                ),
                 Align(
                   alignment: Alignment.topCenter,
                   child: Container(

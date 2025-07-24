@@ -81,7 +81,7 @@ class AuthGate extends StatelessWidget {
                     const FeatureHighlight(
                       icon: Icons.check_circle_outline,
                       title: 'Effortless Lists',
-                      description: 'Quickly create and manage all of your to-do lists, shopping lists, and more.',
+                      description: 'Quickly manage all of your to-do lists, shopping lists, and more.',
                     ),
                     const FeatureHighlight(
                       icon: Icons.camera_alt_outlined,

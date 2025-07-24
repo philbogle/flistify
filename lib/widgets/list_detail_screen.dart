@@ -502,7 +502,11 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
       );
       return;
     }
-    final firstCamera = cameras.first;
+    // Find the rear camera
+    final rearCamera = cameras.firstWhere(
+      (camera) => camera.lensDirection == CameraLensDirection.back,
+      orElse: () => cameras.first, // Fallback to the first camera if no rear camera is found
+    );
 
     final XFile? image = await Navigator.of(context).push(
       MaterialPageRoute(
