@@ -1,4 +1,4 @@
-package com.example.listify_mobile
+package com.katwijbo.listify_mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

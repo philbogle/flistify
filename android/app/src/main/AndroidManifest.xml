@@ -2,7 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <application
-        android:label="listify_mobile"
+        android:label="Listify"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
