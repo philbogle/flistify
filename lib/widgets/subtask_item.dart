@@ -164,6 +164,14 @@ class _SubtaskItemState extends State<SubtaskItem> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.subitem.isHeader) {
+      return ListTile(
+        title: Text(
+          widget.subitem.title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+      );
+    }
     return ListTile(
       leading: CircularCheckbox(
         value: _optimisticCompleted,

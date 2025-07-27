@@ -110,12 +110,12 @@ class _ListCardState extends State<ListCard> with SingleTickerProviderStateMixin
                 ...widget.list.subitems
                     .where((s) => s.title.isNotEmpty)
                     .map((subitem) {
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 32.0),
-                    child: ReadOnlySubtaskItem(
-                        subitem: subitem, listId: widget.list.id),
-                  );
-                }).toList(),
+                      return Padding(
+                        padding: const EdgeInsets.only(left: 32.0),
+                        child: ReadOnlySubtaskItem(
+                            subitem: subitem, listId: widget.list.id),
+                      );
+                    }).toList(),
                 const SizedBox(height: 8), // Add some padding at the bottom
               ],
             ),

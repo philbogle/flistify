@@ -198,8 +198,8 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                     case 'autogenerate':
                       _autogenerateItems(list);
                       break;
-                    case 'autosort':
-                      _autosortItems(list);
+                    case 'autosort_and_group':
+                      _autosortAndGroupItems(list);
                       break;
                     case 'scan_more':
                       _scanAndAppendItems(list);
@@ -279,12 +279,12 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                     ),
                   ),
                   PopupMenuItem<String>(
-                    value: 'autosort',
+                    value: 'autosort_and_group',
                     child: Row(
                       children: [
-                        Icon(Icons.sort),
+                        Icon(Icons.auto_awesome_motion),
                         SizedBox(width: 8),
-                        Text('Autosort Items'),
+                        Text('Autosort & Group'),
                       ],
                     ),
                   ),
@@ -451,19 +451,22 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     }
   }
 
-  void _autosortItems(ListModel list) async {
+  void _autosortAndGroupItems(ListModel list) async {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('🤖 Autosorting items...')),
+      const SnackBar(content: Text('🤖 Autosorting and grouping items...')),
     );
 
     final requestBody = {
       'listTitle': list.title,
-      'subitems': list.subitems.map((s) => {'id': s.id, 'title': s.title, 'completed': s.completed}).toList(),
+      'subitems': list.subitems
+          .where((s) => !s.isHeader) // Exclude existing headers from the request
+          .map((s) => {'id': s.id, 'title': s.title, 'completed': s.completed, 'isHeader': s.isHeader})
+          .toList(),
     };
 
     try {
       final response = await http.post(
-        Uri.parse('$backendBaseUrl/api/autosortListItems'),
+        Uri.parse('$backendBaseUrl/api/autosortAndGroupListItems'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
@@ -472,9 +475,12 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
         final data = jsonDecode(response.body);
         final sortedSubitems = (data['sortedSubitems'] as List<dynamic>? ?? [])
             .map((item) => {
-                  'id': list.subitems.firstWhere((s) => s.title == item['title'], orElse: () => Subitem(id: DateTime.now().millisecondsSinceEpoch.toString(), title: item['title'], completed: item['completed'])).id,
+                  'id': item['isHeader'] 
+                      ? FirebaseFirestore.instance.collection('dummy').doc().id 
+                      : list.subitems.firstWhere((s) => s.id == item['id'], orElse: () => Subitem(id: FirebaseFirestore.instance.collection('dummy').doc().id, title: item['title'], completed: item['completed'], isHeader: item['isHeader'])).id,
                   'title': item['title'] ?? '',
                   'completed': item['completed'] ?? false,
+                  'isHeader': item['isHeader'] ?? false,
                 })
             .toList();
 

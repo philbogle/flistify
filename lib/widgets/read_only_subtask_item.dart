@@ -69,6 +69,14 @@ class _ReadOnlySubtaskItemState extends State<ReadOnlySubtaskItem> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.subitem.isHeader) {
+      return ListTile(
+        title: Text(
+          widget.subitem.title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      );
+    }
     return ListTile(
       onTap: () {
         Navigator.push(
