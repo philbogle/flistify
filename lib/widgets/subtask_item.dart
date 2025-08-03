@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:listify_mobile/widgets/link_utils.dart';
 import 'package:listify_mobile/widgets/shimmer_placeholder.dart';
 
+/// An editable sub-item that is displayed in a list.
 class SubtaskItem extends StatefulWidget {
   final Subitem subitem;
   final String listId;
@@ -28,6 +29,7 @@ class SubtaskItem extends StatefulWidget {
   State<SubtaskItem> createState() => _SubtaskItemState();
 }
 
+/// State class for [SubtaskItem].
 class _SubtaskItemState extends State<SubtaskItem> {
   late final TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
@@ -37,6 +39,12 @@ class _SubtaskItemState extends State<SubtaskItem> {
   bool _isLoadingPreview = false;
 
   @override
+  /// Initializes the state of the widget.
+  ///
+  /// This method is called once when the widget is inserted into the widget tree.
+  /// It initializes the [_controller] with the subitem's title, sets the editing
+  /// mode based on [startInEditMode], and sets up a listener for the [_focusNode]
+  /// to update the subitem when focus is lost. It also fetches the link preview.
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.subitem.title);
@@ -58,6 +66,11 @@ class _SubtaskItemState extends State<SubtaskItem> {
   }
 
   @override
+  /// Called when the widget is re-built with new parameters.
+  ///
+  /// This method is called when the widget's configuration changes.
+  /// It updates the [_controller]'s text and refetches the link preview
+  /// if the subitem's title has changed.
   void didUpdateWidget(SubtaskItem oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.subitem.title != oldWidget.subitem.title) {
@@ -66,6 +79,12 @@ class _SubtaskItemState extends State<SubtaskItem> {
     }
   }
 
+  /// Fetches the link preview for the subitem's title if it contains a URL.
+  ///
+  /// This method extracts a URL from the subitem's title, makes an HTTP request
+  /// to fetch the content of the URL, parses the HTML to extract the title,
+  /// description, and image URL, and then updates the [_linkPreview] state.
+  /// It also manages the [_isLoadingPreview] state.
   Future<void> _fetchLinkPreview() async {
     final url = LinkUtils.extractUrl(widget.subitem.title);
     if (url != null) {
@@ -97,12 +116,21 @@ class _SubtaskItemState extends State<SubtaskItem> {
   }
 
   @override
+  /// Disposes of the controllers when the widget is disposed.
+  ///
+  /// This method is called when the widget is removed from the widget tree.
+  /// It disposes of the [_controller] and [_focusNode] to prevent memory leaks.
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
+  /// Updates the subitem in Firestore.
+  ///
+  /// If the controller's text is empty, it calls the [onDelete] callback.
+  /// If the text has not changed, it does nothing. Otherwise, it updates the
+  /// subitem's title in Firestore and sets [_isEditing] to false.
   void _updateSubitem() {
     if (_controller.text.isEmpty) {
       widget.onDelete?.call();
@@ -140,6 +168,10 @@ class _SubtaskItemState extends State<SubtaskItem> {
     widget.onSubmitted?.call();
   }
 
+  /// Handles the change in the checkbox value.
+  ///
+  /// Updates the optimistic completed state and then updates the subitem's
+  /// 'completed' status in Firestore using a transaction.
   void _handleCheckboxChanged(bool? value) {
     if (value == null) return;
 

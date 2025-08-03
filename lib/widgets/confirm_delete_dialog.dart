@@ -1,12 +1,14 @@
 
 import 'package:flutter/material.dart';
 
+/// A dialog that asks the user to confirm that they want to delete a list.
 class ConfirmDeleteDialog extends StatelessWidget {
   final String listName;
 
   const ConfirmDeleteDialog({super.key, required this.listName});
 
   @override
+  /// Builds the widget.
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Delete List?'),

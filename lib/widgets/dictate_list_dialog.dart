@@ -7,6 +7,7 @@ import 'package:listify_mobile/constants.dart';
 
 import 'package:listify_mobile/models/list.dart';
 
+/// A dialog that allows the user to dictate or paste a list.
 class DictateListDialog extends StatefulWidget {
   final ListModel list;
 
@@ -16,10 +17,18 @@ class DictateListDialog extends StatefulWidget {
   State<DictateListDialog> createState() => _DictateListDialogState();
 }
 
+/// State class for [DictateListDialog].
 class _DictateListDialogState extends State<DictateListDialog> {
+  /// Controller for the text input field.
   final TextEditingController _controller = TextEditingController();
+  /// Indicates whether a loading operation is in progress.
   bool _isLoading = false;
 
+  /// Creates a list from the dictated or pasted text.
+  ///
+  /// This method sends the dictated text to a backend API for extraction
+  /// of list items and then updates the Firestore document with the new subitems.
+  /// It handles loading states and error reporting.
   void _createList() async {
     if (_controller.text.trim().isEmpty) return;
 
@@ -77,6 +86,7 @@ class _DictateListDialogState extends State<DictateListDialog> {
   }
 
   @override
+  /// Builds the widget.
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Dictate or Paste List'),

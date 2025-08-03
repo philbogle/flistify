@@ -5,10 +5,15 @@ import 'package:listify_mobile/main.dart';
 import 'package:listify_mobile/widgets/help_dialog.dart';
 
 
+/// A drawer that is displayed on the share screen.
 class ShareDrawer extends StatelessWidget {
   const ShareDrawer({super.key});
 
   @override
+  /// Builds the widget.
+  ///
+  /// This method constructs the UI for the drawer, including the header,
+  /// navigation items (Home, Help), and a sign-out option if the user is authenticated.
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final bool isAnonymous = user?.isAnonymous ?? true;

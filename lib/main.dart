@@ -35,10 +35,15 @@ void main() async {
   runApp(const MyApp());
 }
 
+/// The main application widget.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
+  /// Builds the widget.
+  ///
+  /// This method constructs the UI for the main application, setting up the
+  /// [MaterialApp] with a title, theme, and the [AuthGate] as its home.
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Listify',
@@ -56,10 +61,17 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// A widget that handles authentication and routing.
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   @override
+  /// Builds the widget.
+  ///
+  /// This method determines which page to display based on the current URI.
+  /// If the URI indicates a shared list, it navigates to the [ShareScreen].
+  /// Otherwise, it uses a [StreamBuilder] to listen for authentication state changes
+  /// and displays either a sign-in screen or the [ListPage] accordingly.
   Widget build(BuildContext context) {
     final uri = Uri.base;
     Widget page;
@@ -118,7 +130,7 @@ class AuthGate extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () async {
                         try {
-                          final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+                          final GoogleSignInAccount? googleUser = await GoogleSignIn(scopes: ['https://www.googleapis.com/auth/tasks']).signIn();
 
                           if (googleUser == null) {
                             // User cancelled the sign-in
@@ -164,6 +176,7 @@ class AuthGate extends StatelessWidget {
   }
 }
 
+/// A widget that displays a feature highlight.
 class FeatureHighlight extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -177,6 +190,10 @@ class FeatureHighlight extends StatelessWidget {
   });
 
   @override
+  /// Builds the widget.
+  ///
+  /// This method constructs the UI for a feature highlight, displaying an icon,
+  /// a title, and a description in a row layout.
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -200,6 +217,7 @@ class FeatureHighlight extends StatelessWidget {
   }
 }
 
+/// The main page of the application, which displays a list of lists.
 class ListPage extends StatefulWidget {
   const ListPage({super.key});
 
@@ -207,12 +225,16 @@ class ListPage extends StatefulWidget {
   State<ListPage> createState() => _ListPageState();
 }
 
+/// State class for [ListPage].
 class _ListPageState extends State<ListPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late final Stream<QuerySnapshot> _listsStream;
   bool _isCompletedExpanded = false;
   bool _isScanning = false;
 
+  /// Handles the completion status of a list.
+  ///
+  /// Updates the 'completed' field of the specified list in Firestore.
   void _handleListCompleted(ListModel list, bool? completed) {
     if (completed == null) return;
 
@@ -223,6 +245,10 @@ class _ListPageState extends State<ListPage> {
   }
 
   @override
+  /// Initializes the state of the widget.
+  ///
+  /// This method is called once when the widget is inserted into the widget tree.
+  /// It initializes the [_listsStream] to fetch lists from Firestore for the current user.
   void initState() {
     super.initState();
     final user = FirebaseAuth.instance.currentUser;
@@ -236,6 +262,12 @@ class _ListPageState extends State<ListPage> {
     }
   }
 
+  /// Scans an image and creates a new list from its content.
+  ///
+  /// This method launches the [TakePictureScreen] to capture an image.
+  /// If an image is captured, it sends the image data to a backend API
+  /// for text extraction and then creates a new list in Firestore with the
+  /// extracted title and subitems. It handles loading states and error reporting.
   Future<void> _scanAndCreateList() async {
     final XFile? image = await Navigator.push(
       context,

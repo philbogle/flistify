@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
+/// A screen that allows the user to take a picture.
 class TakePictureScreen extends StatefulWidget {
   const TakePictureScreen({super.key});
 
@@ -13,16 +14,26 @@ class TakePictureScreen extends StatefulWidget {
   State<TakePictureScreen> createState() => _TakePictureScreenState();
 }
 
+/// State class for [TakePictureScreen].
 class _TakePictureScreenState extends State<TakePictureScreen> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
 
   @override
+  /// Initializes the state of the widget.
+  ///
+  /// This method is called once when the widget is inserted into the widget tree.
+  /// It initializes the camera controller and prepares the camera for use.
   void initState() {
     super.initState();
     _initializeControllerFuture = _initializeCamera();
   }
 
+  /// Initializes the camera.
+  ///
+  /// This method retrieves available cameras, selects the rear camera (or the first available),
+  /// initializes the [CameraController] with a medium resolution preset, and locks the
+  /// capture orientation for non-web platforms.
   Future<void> _initializeCamera() async {
     final cameras = await availableCameras();
     if (cameras.isEmpty) {
@@ -45,12 +56,17 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   @override
+  /// Disposes of the controller when the widget is disposed.
+  ///
+  /// This method is called when the widget is removed from the widget tree.
+  /// It disposes of the [CameraController] to release camera resources.
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
   @override
+  /// Builds the widget.
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Take a picture')),
@@ -59,15 +75,12 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             // If the Future is complete, display the preview.
-            final size = MediaQuery.of(context).size;
-            final deviceRatio = size.width / size.height;
-            return Transform.scale(
-              scale: _controller.value.aspectRatio / deviceRatio,
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: CameraPreview(_controller),
-                ),
+            return FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _controller.value.previewSize!.height,
+                height: _controller.value.previewSize!.width,
+                child: CameraPreview(_controller),
               ),
             );
           } else if (snapshot.hasError) {

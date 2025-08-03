@@ -10,10 +10,12 @@ import 'package:camera/camera.dart';
 import 'package:listify_mobile/widgets/dictate_list_dialog.dart';
 import 'package:listify_mobile/constants.dart';
 import 'package:listify_mobile/widgets/share_list_dialog.dart';
+import 'package:listify_mobile/services/google_tasks_service.dart';
 import 'package:listify_mobile/widgets/take_picture_screen.dart';
 import 'package:listify_mobile/widgets/help_dialog.dart';
 import 'package:listify_mobile/widgets/share_drawer.dart';
 
+/// A screen that displays the details of a list.
 class ListDetailScreen extends StatefulWidget {
   final String listId;
   final bool isShared;
@@ -24,6 +26,7 @@ class ListDetailScreen extends StatefulWidget {
   State<ListDetailScreen> createState() => _ListDetailScreenState();
 }
 
+/// State class for [ListDetailScreen].
 class _ListDetailScreenState extends State<ListDetailScreen> {
   late TextEditingController _titleController;
   bool _isEditing = false;
@@ -36,6 +39,12 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   bool _isReturningFromPicker = false;
 
   @override
+  /// Initializes the state of the widget.
+  ///
+  /// This method is called once when the widget is inserted into the widget tree.
+  /// It initializes the [_titleController] and [_titleFocusNode], and adds a listener
+  /// to the focus node to update the title when the focus is lost. It also checks
+  /// if the list is empty and adds an initial blank subitem if needed.
   void initState() {
     super.initState();
     _titleController = TextEditingController();
@@ -57,6 +66,11 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   }
 
   @override
+  /// Disposes of the controllers when the widget is disposed.
+  ///
+  /// This method is called when the widget is removed from the widget tree.
+  /// It saves any pending title edits, disposes of the [_titleController]
+  /// and [_titleFocusNode] to prevent memory leaks.
   void dispose() {
     // Save any pending edits before the screen is destroyed
     if (_isEditing) {
@@ -67,6 +81,11 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     super.dispose();
   }
 
+  /// Updates the title of the list.
+  ///
+  /// If the title controller's text is not empty, it updates the 'title' field
+  /// in Firestore for the current list. If `silent` is false, it also updates
+  /// the widget's state to exit editing mode.
   void _updateTitle({bool silent = false}) {
     if (_titleController.text.isNotEmpty) {
       FirebaseFirestore.instance
@@ -81,6 +100,10 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     }
   }
 
+  /// Adds a new sub-item to the list.
+  ///
+  /// Creates a new [Subitem] with a unique ID and an empty title, adds it to the
+  /// local [_subitems] list, and updates the Firestore document to reflect the change.
   void _addNewSubitem() {
     final newSubitem = Subitem(
       id: FirebaseFirestore.instance.collection('dummy').doc().id,
@@ -98,6 +121,11 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     });
   }
 
+  /// Deletes a sub-item from the list.
+  ///
+  /// Removes the subitem with the given [subitemId] from the local list and
+  /// updates the Firestore document. It also animates the removal from the UI.
+  /// If the Firestore update fails, it re-inserts the item and shows an error.
   void _deleteSubitem(String subitemId) {
     final index = _subitems.indexWhere((s) => s.id == subitemId);
     if (index == -1) return;
@@ -134,6 +162,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   }
 
   @override
+  /// Builds the widget.
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('tasks').doc(widget.listId).snapshots(),
@@ -210,29 +239,17 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                         builder: (context) => DictateListDialog(list: list),
                       );
                       break;
-                    case 'share':
-                      if (list.shareId == null) {
-                        final newShareId = FirebaseFirestore.instance.collection('dummy').doc().id;
-                        FirebaseFirestore.instance.collection('tasks').doc(list.id).update({
-                          'shareId': newShareId,
-                        }).then((_) {
-                          final newList = ListModel(
-                            id: list.id,
-                            title: list.title,
-                            completed: list.completed,
-                            subitems: list.subitems,
-                            createdAt: list.createdAt,
-                            shareId: newShareId,
-                          );
-                          showDialog(
-                            context: context,
-                            builder: (context) => ShareListDialog(list: newList),
-                          );
-                        });
-                      } else {
-                        showDialog(
-                          context: context,
-                          builder: (context) => ShareListDialog(list: list),
+                    case 'export_to_google_tasks':
+                      final googleTasksService = GoogleTasksService();
+                      try {
+                        await googleTasksService.exportTasks(list);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('List exported to Google Tasks successfully!')),
+                        );
+                      } catch (e) {
+                        debugPrint('Export to Google Tasks error: $e');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to export to Google Tasks: $e')),
                         );
                       }
                       break;
@@ -320,6 +337,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                       ],
                     ),
                   ),
+                  
                   const PopupMenuDivider(),
                   PopupMenuItem<String>(
                     value: 'delete_completed',
@@ -390,15 +408,17 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
           ),
         );
 
-        if (_isReturningFromPicker) {
-          return child;
-        }
-
-        return child;
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: child,
+          ),
+        );
       },
     );
   }
 
+  /// Autogenerates items for the list.
   void _autogenerateItems(ListModel list) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('🤖 Autogenerating items...')),
@@ -451,6 +471,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     }
   }
 
+  /// Autosorts and groups the items in the list.
   void _autosortAndGroupItems(ListModel list) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('🤖 Autosorting and grouping items...')),
@@ -499,6 +520,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     }
   }
 
+  /// Scans an image and appends the items to the list.
   void _scanAndAppendItems(ListModel list) async {
     final cameras = await availableCameras();
     if (cameras.isEmpty) {

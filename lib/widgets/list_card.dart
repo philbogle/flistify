@@ -4,6 +4,7 @@ import 'package:listify_mobile/widgets/circular_checkbox.dart';
 import 'package:listify_mobile/widgets/list_detail_screen.dart';
 import 'package:listify_mobile/widgets/read_only_subtask_item.dart';
 
+/// A card that displays a preview of a list.
 class ListCard extends StatefulWidget {
   final ListModel list;
   final ValueChanged<bool?> onCompleted;
@@ -14,12 +15,18 @@ class ListCard extends StatefulWidget {
   State<ListCard> createState() => _ListCardState();
 }
 
+/// State class for [ListCard].
 class _ListCardState extends State<ListCard> with SingleTickerProviderStateMixin {
   late bool _optimisticCompleted;
   late AnimationController _animationController;
   late Animation<double> _animation;
 
   @override
+  /// Initializes the state of the widget.
+  ///
+  /// This method is called once when the widget is inserted into the widget tree.
+  /// It initializes the [_optimisticCompleted] state with the list's completed status,
+  /// and sets up the [_animationController] and [_animation] for the card's animation.
   void initState() {
     super.initState();
     _optimisticCompleted = widget.list.completed;
@@ -34,12 +41,21 @@ class _ListCardState extends State<ListCard> with SingleTickerProviderStateMixin
   }
 
   @override
+  /// Disposes of the animation controller when the widget is disposed.
+  ///
+  /// This method is called when the widget is removed from the widget tree.
+  /// It disposes of the [_animationController] to prevent memory leaks.
   void dispose() {
     _animationController.dispose();
     super.dispose();
   }
 
   @override
+  /// Called when the widget is re-built with new parameters.
+  ///
+  /// This method is called when the widget's configuration changes.
+  /// It updates the [_optimisticCompleted] state if the list's completed
+  /// status has changed.
   void didUpdateWidget(ListCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.list.completed != oldWidget.list.completed) {

@@ -1,3 +1,4 @@
+/// A model that represents a sub-item in a list.
 class Subitem {
   final String id;
   final String title;
@@ -6,6 +7,7 @@ class Subitem {
 
   Subitem({required this.id, required this.title, required this.completed, this.isHeader = false});
 
+  /// Creates a [Subitem] from a map of data.
   factory Subitem.fromMap(Map<String, dynamic> data) {
     return Subitem(
       id: data['id'] ?? '',
@@ -15,6 +17,7 @@ class Subitem {
     );
   }
 
+  /// Converts this [Subitem] to a map of key-value pairs.
   Map<String, dynamic> toMap() {
     return {
       'id': id,

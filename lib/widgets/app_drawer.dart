@@ -1,13 +1,16 @@
 
 import 'package:flutter/material.dart';
+import 'package:listify_mobile/services/google_tasks_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:listify_mobile/widgets/help_dialog.dart';
 
 
+/// A drawer that displays application-level navigation and actions.
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
   @override
+  /// Builds the widget.
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final bool isAnonymous = user?.isAnonymous ?? true;
@@ -46,6 +49,7 @@ class AppDrawer extends StatelessWidget {
               );
             },
           ),
+          
           if (user != null && !isAnonymous) ...[
             const Divider(),
             ListTile(

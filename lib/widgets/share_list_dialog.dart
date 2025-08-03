@@ -4,14 +4,16 @@ import 'package:flutter/services.dart';
 import 'package:listify_mobile/models/list.dart';
 import 'package:listify_mobile/constants.dart';
 
+/// A dialog that displays a shareable link to a list.
 class ShareListDialog extends StatelessWidget {
   final ListModel list;
 
   const ShareListDialog({super.key, required this.list});
 
   @override
+  /// Builds the widget.
   Widget build(BuildContext context) {
-    final shareLink = '$webClientBaseUrl/share/${list.shareId}';
+    final shareLink = "$webClientBaseUrl/share/${list.shareId}";
     return AlertDialog(
       title: const Text('Share List'),
       content: Column(

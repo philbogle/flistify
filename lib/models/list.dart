@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'subitem.dart';
 
+/// A model that represents a list.
 class ListModel {
   final String id;
   final String title;
@@ -18,6 +19,7 @@ class ListModel {
     this.shareId,
   });
 
+  /// Creates a [ListModel] from a map of data.
   factory ListModel.fromMap(String id, Map<String, dynamic> data) {
     return ListModel(
       id: id,

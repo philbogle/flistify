@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 
+/// A circular checkbox widget.
 class CircularCheckbox extends StatelessWidget {
   final bool value;
   final ValueChanged<bool?>? onChanged;
@@ -12,6 +13,7 @@ class CircularCheckbox extends StatelessWidget {
   });
 
   @override
+  /// Builds the widget.
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {

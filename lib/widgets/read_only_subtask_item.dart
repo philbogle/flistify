@@ -5,6 +5,7 @@ import 'package:listify_mobile/widgets/circular_checkbox.dart';
 import 'package:listify_mobile/widgets/link_utils.dart';
 import 'package:listify_mobile/widgets/list_detail_screen.dart';
 
+/// A read-only sub-item that is displayed in a list preview.
 class ReadOnlySubtaskItem extends StatefulWidget {
   final Subitem subitem;
   final String listId;
@@ -15,16 +16,26 @@ class ReadOnlySubtaskItem extends StatefulWidget {
   State<ReadOnlySubtaskItem> createState() => _ReadOnlySubtaskItemState();
 }
 
+/// State class for [ReadOnlySubtaskItem].
 class _ReadOnlySubtaskItemState extends State<ReadOnlySubtaskItem> {
   late bool _optimisticCompleted;
 
   @override
+  /// Initializes the state of the widget.
+  ///
+  /// This method is called once when the widget is inserted into the widget tree.
+  /// It initializes the [_optimisticCompleted] state with the subitem's completed status.
   void initState() {
     super.initState();
     _optimisticCompleted = widget.subitem.completed;
   }
 
   @override
+  /// Called when the widget is re-built with new parameters.
+  ///
+  /// This method is called when the widget's configuration changes.
+  /// It updates the [_optimisticCompleted] state if the subitem's completed
+  /// status has changed.
   void didUpdateWidget(ReadOnlySubtaskItem oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.subitem.completed != oldWidget.subitem.completed) {
@@ -32,6 +43,11 @@ class _ReadOnlySubtaskItemState extends State<ReadOnlySubtaskItem> {
     }
   }
 
+  /// Handles the change in the checkbox value.
+  ///
+  /// Updates the optimistic completed state and then updates the subitem's
+  /// 'completed' status in Firestore using a transaction. If the update fails,
+  /// it reverts the optimistic state and shows an error message.
   void _handleCheckboxChanged(bool? value) {
     if (value == null) return;
 

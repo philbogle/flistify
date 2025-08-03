@@ -3,9 +3,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// A dialog that displays help information.
 class HelpDialog extends StatelessWidget {
   const HelpDialog({super.key});
   @override
+  /// Builds the widget.
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Listify Help'),
@@ -128,16 +130,19 @@ class HelpDialog extends StatelessWidget {
 }
 
 
+/// A widget that displays a section of help information.
 class _HelpSection extends StatelessWidget {
   final IconData icon;
   final String title;
   final String content;
+  /// Creates a help section with an icon, title, and content.
   const _HelpSection({
     required this.icon,
     required this.title,
     required this.content,
   });
   @override
+  /// Builds the widget.
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
