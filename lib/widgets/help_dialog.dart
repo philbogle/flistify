@@ -24,50 +24,33 @@ class HelpDialog extends StatelessWidget {
               icon: Icons.add_box_outlined,
               title: 'Creating Lists Manually',
               content:
-                  'Tap the "Add" button and select "Enter manually" to create a new list. You can name your list and add items directly.',
+                  'Tap the "+" button to create a new list. You can name your list and add items directly.',
             ),
             const _HelpSection(
               icon: Icons.camera_alt_outlined,
               title: 'Scanning Lists & Objects',
               content:
-                  'Select "Scan" from the "Add" menu. Use your camera to take a picture of handwriting, printed text, or physical items. The AI will then create a list title and items based on the image content.',
+                  'Tap the camera button to scan a list. Use your camera to take a picture of handwriting, printed text, or physical items. The AI will then create a list title and items based on the image content.',
             ),
             const _HelpSection(
               icon: Icons.keyboard_voice_outlined,
               title: 'Dictate or Paste Text',
               content:
-                  'Choose "Dictate or Paste" from the "Add" menu. Paste text or use your mobile device\'s keyboard dictation feature into the dialog. The AI will convert this text into a structured list.',
+                  'On the list detail screen, tap the microphone button. Paste text or use your mobile device\'s keyboard dictation feature into the dialog. The AI will convert this text into a structured list.',
             ),
-            const _HelpSection(
-              icon: Icons.auto_awesome_outlined,
-              title: 'Autogenerating Items',
-              content:
-                  'Use the "Autogenerate" button on a list card or the "Autogenerate Items" menu option. The AI suggests new items based on the list\'s title and existing content.',
-            ),
-            const _HelpSection(
-              icon: Icons.link,
-              title: 'URL Previews',
-              content:
-                  'When you add a URL to a list item, a preview of the link will be automatically generated, showing the title, description, and an image from the website.',
-            ),
-            const _HelpSection(
-              icon: Icons.touch_app,
-              title: 'Tapping Behavior',
-              content:
-                  'On the main screen, tapping a list\'s title or a sub-item will navigate to its detail screen. On the list detail screen, tapping the list title or an item will allow you to edit it. Changes are saved automatically when the field loses focus.',
-            ),
+            
             const ExpansionTile(
+              initiallyExpanded: true,
               leading: Icon(Icons.info_outline),
               title: Text('List Detail Page Actions'),
               children: [
                 _HelpSection(icon: Icons.check, title: 'Mark Complete', content: 'Mark the entire list as complete.'),
                 _HelpSection(icon: Icons.auto_awesome_outlined, title: 'Autogenerate Items', content: 'Automatically generate new items based on the list\'s title and existing content.'),
-                _HelpSection(icon: Icons.sort, title: 'Autosort Items', content: 'Automatically sort the items in the list.'),
-                _HelpSection(icon: Icons.camera_alt_outlined, title: 'Scan More Items', content: 'Scan another image and add the items to the current list.'),
-                _HelpSection(icon: Icons.mic_none, title: 'Dictate or Paste', content: 'Add items to the list by dictating or pasting text.'),
-                _HelpSection(icon: Icons.share, title: 'Share List', content: 'Share the list with others.'),
+                _HelpSection(icon: Icons.sort, title: 'Autosort & Group', content: 'Automatically sort and group the items in the list.'),
+                _HelpSection(icon: Icons.share, title: 'Share List', content: 'Share the list with others for collaborative editing.'),
                 _HelpSection(icon: Icons.check_circle_outline, title: 'Delete Completed Items', content: 'Remove all completed items from the list.'),
                 _HelpSection(icon: Icons.delete_outline, title: 'Delete List', content: 'Delete the entire list.'),
+                
               ],
             ),
             if (kIsWeb)

@@ -198,10 +198,31 @@ class _SubtaskItemState extends State<SubtaskItem> {
   Widget build(BuildContext context) {
     if (widget.subitem.isHeader) {
       return ListTile(
-        title: Text(
-          widget.subitem.title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
+        title: _isEditing
+            ? TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                autofocus: true,
+                decoration: const InputDecoration(hintText: 'Add header'),
+                onSubmitted: (_) => _updateSubitem(),
+              )
+            : GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isEditing = true;
+                  });
+                },
+                child: Text(
+                  widget.subitem.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+        trailing: _isEditing
+            ? IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: widget.onDelete,
+              )
+            : null,
       );
     }
     return ListTile(

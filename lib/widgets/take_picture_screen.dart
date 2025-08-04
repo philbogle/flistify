@@ -69,19 +69,33 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
   /// Builds the widget.
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Take a picture')),
+      appBar: AppBar(title: const Text('Scan a list')),
       body: FutureBuilder<void>(
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             // If the Future is complete, display the preview.
-            return FittedBox(
-              fit: BoxFit.cover,
-              child: SizedBox(
-                width: _controller.value.previewSize!.height,
-                height: _controller.value.previewSize!.width,
-                child: CameraPreview(_controller),
-              ),
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'Make a picture of handwriting, text, or objects.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: _controller.value.previewSize!.height,
+                      height: _controller.value.previewSize!.width,
+                      child: CameraPreview(_controller),
+                    ),
+                  ),
+                ),
+              ],
             );
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
@@ -121,6 +135,7 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
           ),
         ],
       ),
+      
     );
   }
 }

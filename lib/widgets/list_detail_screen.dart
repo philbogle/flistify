@@ -104,11 +104,12 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   ///
   /// Creates a new [Subitem] with a unique ID and an empty title, adds it to the
   /// local [_subitems] list, and updates the Firestore document to reflect the change.
-  void _addNewSubitem() {
+  void _addNewSubitem({bool isHeader = false}) {
     final newSubitem = Subitem(
       id: FirebaseFirestore.instance.collection('dummy').doc().id,
       title: '',
       completed: false,
+      isHeader: isHeader,
     );
 
     setState(() {
@@ -305,38 +306,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                       ],
                     ),
                   ),
-                  const PopupMenuDivider(),
-                  PopupMenuItem<String>(
-                    value: 'scan_more',
-                    child: Row(
-                      children: [
-                        Icon(Icons.camera_alt_outlined),
-                        SizedBox(width: 8),
-                        Text('Scan More Items'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'dictate_or_paste',
-                    child: Row(
-                      children: [
-                        Icon(Icons.mic_none),
-                        SizedBox(width: 8),
-                        Text('Dictate or Paste'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuDivider(),
-                  PopupMenuItem<String>(
-                    value: 'share',
-                    child: Row(
-                      children: [
-                        Icon(Icons.share),
-                        SizedBox(width: 8),
-                        Text('Share List'),
-                      ],
-                    ),
-                  ),
                   
                   const PopupMenuDivider(),
                   PopupMenuItem<String>(
@@ -374,6 +343,38 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
               ),
             ],
           ),
+          floatingActionButton: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              FloatingActionButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => ShareListDialog(list: list),
+                  );
+                },
+                child: const Icon(Icons.share),
+                heroTag: 'share',
+              ),
+              const SizedBox(height: 10),
+              FloatingActionButton(
+                onPressed: () => _scanAndAppendItems(list),
+                child: const Icon(Icons.camera_alt_outlined),
+                heroTag: 'scan',
+              ),
+              const SizedBox(height: 10),
+              FloatingActionButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => DictateListDialog(list: list),
+                  );
+                },
+                child: const Icon(Icons.mic_none),
+                heroTag: 'dictate',
+              ),
+            ],
+          ),
           body: ListView.builder(
             padding: const EdgeInsets.only(bottom: 80.0), // Added padding to prevent FAB overlap
             key: _animatedListKey,
@@ -384,6 +385,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                   padding: const EdgeInsets.only(left: 16.0, top: 8.0),
                   child: TextButton.icon(
                     onPressed: _addNewSubitem,
+                    onLongPress: () => _addNewSubitem(isHeader: true),
                     icon: const Icon(Icons.add),
                     label: const Text('Add list item'),
                   ),
