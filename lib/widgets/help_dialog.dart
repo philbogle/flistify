@@ -20,12 +20,7 @@ class HelpDialog extends StatelessWidget {
               'Listify helps you create, manage, and share lists by scanning images, dictating or pasting text, and autogenerating items with AI.',
             ),
             const SizedBox(height: 16),
-            const _HelpSection(
-              icon: Icons.add_box_outlined,
-              title: 'Creating Lists Manually',
-              content:
-                  'Tap the "+" button to create a new list. You can name your list and add items directly.',
-            ),
+            _HelpSection(icon: Icons.add, title: 'Add Item', content: 'Tap the "Add list item" button to add a new item to the list. Long press the button to add a header.'),
             const _HelpSection(
               icon: Icons.camera_alt_outlined,
               title: 'Scanning Lists & Objects',
@@ -44,6 +39,7 @@ class HelpDialog extends StatelessWidget {
               leading: Icon(Icons.info_outline),
               title: Text('List Detail Page Actions'),
               children: [
+                _HelpSection(icon: Icons.add, title: 'Add Item', content: 'Tap the "+" button to add a new list.'),
                 _HelpSection(icon: Icons.check, title: 'Mark Complete', content: 'Mark the entire list as complete.'),
                 _HelpSection(icon: Icons.auto_awesome_outlined, title: 'Autogenerate Items', content: 'Automatically generate new items based on the list\'s title and existing content.'),
                 _HelpSection(icon: Icons.sort, title: 'Autosort & Group', content: 'Automatically sort and group the items in the list.'),
