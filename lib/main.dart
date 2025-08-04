@@ -120,12 +120,7 @@ class AuthGate extends StatelessWidget {
                       title: 'List Sharing & Collaboration',
                       description: 'Share your lists with others and edit them together in real-time.',
                     ),
-                    const SizedBox(height: 20),
-                    const FeatureHighlight(
-                      icon: Icons.devices,
-                      title: 'Cross-Device Access',
-                      description: 'Sign in to access your lists across all of your devices.',
-                    ),
+                    
                     const Spacer(),
                     ElevatedButton(
                       onPressed: () async {
@@ -481,7 +476,7 @@ class _ListPageState extends State<ListPage> {
           FloatingActionButton(
             onPressed: _scanAndCreateList,
             heroTag: 'scan',
-            child: const Icon(Icons.camera_alt),
+            child: const Icon(Icons.camera_alt_outlined),
           ),
           const SizedBox(height: 16),
           FloatingActionButton(

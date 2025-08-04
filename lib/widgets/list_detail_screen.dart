@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/list.dart';
@@ -31,20 +33,9 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   late TextEditingController _titleController;
   bool _isEditing = false;
   final FocusNode _titleFocusNode = FocusNode();
-  final GlobalKey _titleKey = GlobalKey();
-  final GlobalKey<AnimatedListState> _animatedListKey = GlobalKey<AnimatedListState>();
-
-  List<Subitem> _subitems = [];
   String? _newlyAddedSubitemId;
-  bool _isReturningFromPicker = false;
 
   @override
-  /// Initializes the state of the widget.
-  ///
-  /// This method is called once when the widget is inserted into the widget tree.
-  /// It initializes the [_titleController] and [_titleFocusNode], and adds a listener
-  /// to the focus node to update the title when the focus is lost. It also checks
-  /// if the list is empty and adds an initial blank subitem if needed.
   void initState() {
     super.initState();
     _titleController = TextEditingController();
@@ -53,26 +44,10 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
         _updateTitle();
       }
     });
-
-    // Add an initial blank item if the list is empty
-    FirebaseFirestore.instance.collection('tasks').doc(widget.listId).get().then((doc) {
-      if (doc.exists) {
-        final list = ListModel.fromMap(doc.id, doc.data() as Map<String, dynamic>);
-        if (list.subitems.where((s) => s.title.isNotEmpty).isEmpty && list.subitems.where((s) => s.title.isEmpty).isEmpty) {
-          _addNewSubitem();
-        }
-      }
-    });
   }
 
   @override
-  /// Disposes of the controllers when the widget is disposed.
-  ///
-  /// This method is called when the widget is removed from the widget tree.
-  /// It saves any pending title edits, disposes of the [_titleController]
-  /// and [_titleFocusNode] to prevent memory leaks.
   void dispose() {
-    // Save any pending edits before the screen is destroyed
     if (_isEditing) {
       _updateTitle(silent: true);
     }
@@ -81,11 +56,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     super.dispose();
   }
 
-  /// Updates the title of the list.
-  ///
-  /// If the title controller's text is not empty, it updates the 'title' field
-  /// in Firestore for the current list. If `silent` is false, it also updates
-  /// the widget's state to exit editing mode.
   void _updateTitle({bool silent = false}) {
     if (_titleController.text.isNotEmpty) {
       FirebaseFirestore.instance
@@ -100,10 +70,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     }
   }
 
-  /// Adds a new sub-item to the list.
-  ///
-  /// Creates a new [Subitem] with a unique ID and an empty title, adds it to the
-  /// local [_subitems] list, and updates the Firestore document to reflect the change.
   void _addNewSubitem({bool isHeader = false}) {
     final newSubitem = Subitem(
       id: FirebaseFirestore.instance.collection('dummy').doc().id,
@@ -112,58 +78,25 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
       isHeader: isHeader,
     );
 
-    setState(() {
-      _subitems.add(newSubitem);
-      _newlyAddedSubitemId = newSubitem.id;
+    FirebaseFirestore.instance.collection('tasks').doc(widget.listId).update({
+      'subtasks': FieldValue.arrayUnion([newSubitem.toMap()]),
     });
 
-    FirebaseFirestore.instance.collection('tasks').doc(widget.listId).update({
-      'subtasks': _subitems.map((s) => s.toMap()).toList(),
+    setState(() {
+      _newlyAddedSubitemId = newSubitem.id;
     });
   }
 
-  /// Deletes a sub-item from the list.
-  ///
-  /// Removes the subitem with the given [subitemId] from the local list and
-  /// updates the Firestore document. It also animates the removal from the UI.
-  /// If the Firestore update fails, it re-inserts the item and shows an error.
   void _deleteSubitem(String subitemId) {
-    final index = _subitems.indexWhere((s) => s.id == subitemId);
-    if (index == -1) return;
-
-    final removedItem = _subitems.removeAt(index);
-    final listRef = FirebaseFirestore.instance.collection('tasks').doc(widget.listId);
-
-    // Animate the removal
-    _animatedListKey.currentState?.removeItem(
-      index,
-      (context, animation) => SizeTransition(
-        sizeFactor: animation,
-        child: SubtaskItem(
-          subitem: removedItem,
-          listId: widget.listId,
-        ),
-      ),
-      duration: const Duration(milliseconds: 300),
-    );
-
-    // Update Firestore in the background
-    listRef.update({
-      'subtasks': _subitems.map((s) => s.toMap()).toList(),
-    }).catchError((error) {
-      // If the update fails, re-insert the item and show an error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to delete item: $error")),
-      );
-      setState(() {
-        _subitems.insert(index, removedItem);
-        _animatedListKey.currentState?.insertItem(index);
-      });
+    FirebaseFirestore.instance.runTransaction((transaction) async {
+      final doc = await transaction.get(FirebaseFirestore.instance.collection('tasks').doc(widget.listId));
+      final subtasks = List<Map<String, dynamic>>.from(doc.data()!['subtasks']);
+      subtasks.removeWhere((subtask) => subtask['id'] == subitemId);
+      transaction.update(doc.reference, {'subtasks': subtasks});
     });
   }
 
   @override
-  /// Builds the widget.
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance.collection('tasks').doc(widget.listId).snapshots(),
@@ -175,7 +108,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
         }
 
         final list = ListModel.fromMap(snapshot.data!.id, snapshot.data!.data() as Map<String, dynamic>);
-        _subitems = list.subitems;
         final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.black, fontWeight: FontWeight.bold);
 
         if (!_isEditing) {
@@ -212,6 +144,28 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                   : Text(widget.isShared ? 'Shared list: ${list.title}' : list.title, style: titleStyle),
             ),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.share),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => ShareListDialog(list: list),
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.camera_alt_outlined),
+                onPressed: () => _scanAndAppendItems(list),
+              ),
+              IconButton(
+                icon: const Icon(Icons.mic_none),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => DictateListDialog(list: list),
+                  );
+                },
+              ),
               PopupMenuButton<String>(
                 onSelected: (String result) async {
                   switch (result) {
@@ -343,70 +297,35 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
               ),
             ],
           ),
-          floatingActionButton: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
+          
+          body: ListView(
+            padding: const EdgeInsets.only(bottom: 160.0), // Added padding to prevent FAB overlap
             children: [
-              FloatingActionButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => ShareListDialog(list: list),
-                  );
-                },
-                child: const Icon(Icons.share),
-                heroTag: 'share',
-              ),
-              const SizedBox(height: 10),
-              FloatingActionButton(
-                onPressed: () => _scanAndAppendItems(list),
-                child: const Icon(Icons.camera_alt_outlined),
-                heroTag: 'scan',
-              ),
-              const SizedBox(height: 10),
-              FloatingActionButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => DictateListDialog(list: list),
-                  );
-                },
-                child: const Icon(Icons.mic_none),
-                heroTag: 'dictate',
+              ...list.subitems.map((subitem) {
+                bool isNew = subitem.id == _newlyAddedSubitemId;
+                return SubtaskItem(
+                  key: ValueKey(subitem.id),
+                  subitem: subitem,
+                  listId: list.id,
+                  startInEditMode: isNew,
+                  onDelete: () => _deleteSubitem(subitem.id),
+                  onSubmitted: () {
+                    if (isNew) {
+                      _addNewSubitem();
+                    }
+                  },
+                );
+              }).toList(),
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, top: 8.0),
+                child: TextButton.icon(
+                  onPressed: _addNewSubitem,
+                  onLongPress: () => _addNewSubitem(isHeader: true),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add list item'),
+                ),
               ),
             ],
-          ),
-          body: ListView.builder(
-            padding: const EdgeInsets.only(bottom: 80.0), // Added padding to prevent FAB overlap
-            key: _animatedListKey,
-            itemCount: _subitems.length + 1, // Add one for the button
-            itemBuilder: (context, index) {
-              if (index == _subitems.length) {
-                return Padding(
-                  padding: const EdgeInsets.only(left: 16.0, top: 8.0),
-                  child: TextButton.icon(
-                    onPressed: _addNewSubitem,
-                    onLongPress: () => _addNewSubitem(isHeader: true),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add list item'),
-                  ),
-                );
-              }
-
-              final subitem = _subitems[index];
-              bool isNew = subitem.id == _newlyAddedSubitemId;
-              return SubtaskItem(
-                key: ValueKey(subitem.id),
-                subitem: subitem,
-                listId: list.id,
-                startInEditMode: isNew,
-                onDelete: () => _deleteSubitem(subitem.id),
-                onSubmitted: () {
-                  if (isNew) {
-                    _addNewSubitem();
-                  }
-                },
-              );
-            },
           ),
         );
 
@@ -602,12 +521,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error scanning items: $e")),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isReturningFromPicker = false;
-        });
       }
     }
   }
