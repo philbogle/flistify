@@ -117,31 +117,37 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
         final child = Scaffold(
           drawer: widget.isShared ? const ShareDrawer() : null,
           appBar: AppBar(
-            title: GestureDetector(
-              onTap: () {
-                if (mounted) {
-                  setState(() {
-                    _isEditing = true;
-                    _titleController.selection = TextSelection(
-                      baseOffset: 0,
-                      extentOffset: _titleController.text.length,
-                    );
-                  });
-                }
-              },
-              child: _isEditing
-                  ? TextField(
-                      controller: _titleController,
-                      focusNode: _titleFocusNode,
-                      autofocus: true,
-                      style: titleStyle,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: 'Enter title',
-                      ),
-                      onSubmitted: (_) => _updateTitle(),
-                    )
-                  : Text(widget.isShared ? 'Shared list: ${list.title}' : list.title, style: titleStyle),
+            title: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      if (mounted) {
+                        setState(() {
+                          _isEditing = true;
+                          _titleController.selection = TextSelection(
+                            baseOffset: 0,
+                            extentOffset: _titleController.text.length,
+                          );
+                        });
+                      }
+                    },
+                    child: _isEditing
+                        ? TextField(
+                            controller: _titleController,
+                            focusNode: _titleFocusNode,
+                            autofocus: true,
+                            style: titleStyle,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: 'Enter title',
+                            ),
+                            onSubmitted: (_) => _updateTitle(),
+                          )
+                        : Text(widget.isShared ? 'Shared list: ${list.title}' : list.title, style: titleStyle),
+                  ),
+                ),
+              ],
             ),
             actions: [
               IconButton(
@@ -153,19 +159,8 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                   );
                 },
               ),
-              IconButton(
-                icon: const Icon(Icons.camera_alt_outlined),
-                onPressed: () => _scanAndAppendItems(list),
-              ),
-              IconButton(
-                icon: const Icon(Icons.mic_none),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => DictateListDialog(list: list),
-                  );
-                },
-              ),
+              
+              
               PopupMenuButton<String>(
                 onSelected: (String result) async {
                   switch (result) {
@@ -230,12 +225,22 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                   PopupMenuItem<String>(
-                    value: 'mark_complete',
+                    value: 'scan_more',
                     child: Row(
                       children: [
-                        Icon(Icons.check),
+                        Icon(Icons.camera_alt_outlined),
                         SizedBox(width: 8),
-                        Text('Mark Complete'),
+                        Text('Scan More Items'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'dictate_or_paste',
+                    child: Row(
+                      children: [
+                        Icon(Icons.mic_none),
+                        SizedBox(width: 8),
+                        Text('Dictate or Paste'),
                       ],
                     ),
                   ),
@@ -260,6 +265,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                       ],
                     ),
                   ),
+                  
                   
                   const PopupMenuDivider(),
                   PopupMenuItem<String>(
