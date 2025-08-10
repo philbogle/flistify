@@ -33,7 +33,10 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   late TextEditingController _titleController;
   bool _isEditing = false;
   final FocusNode _titleFocusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
   String? _newlyAddedSubitemId;
+  // Optimistic additions rendered immediately before Firestore roundtrip completes
+  final List<Subitem> _pendingSubitems = <Subitem>[];
 
   @override
   void initState() {
@@ -53,6 +56,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     }
     _titleController.dispose();
     _titleFocusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -70,7 +74,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     }
   }
 
-  void _addNewSubitem({bool isHeader = false}) {
+  void _addNewSubitem({bool isHeader = false}) async {
     final newSubitem = Subitem(
       id: FirebaseFirestore.instance.collection('dummy').doc().id,
       title: '',
@@ -78,13 +82,40 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
       isHeader: isHeader,
     );
 
-    FirebaseFirestore.instance.collection('tasks').doc(widget.listId).update({
-      'subtasks': FieldValue.arrayUnion([newSubitem.toMap()]),
-    });
-
+    // Optimistically render immediately
     setState(() {
+      _pendingSubitems.add(newSubitem);
       _newlyAddedSubitemId = newSubitem.id;
     });
+    // Ensure the new item is visible
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent + 120,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
+
+    try {
+      await FirebaseFirestore.instance.collection('tasks').doc(widget.listId).update({
+        'subtasks': FieldValue.arrayUnion([newSubitem.toMap()]),
+      });
+      // When the snapshot reflects this item, it will be pruned from _pendingSubitems in build
+    } catch (e) {
+      // Rollback optimistic addition on error
+      if (mounted) {
+        setState(() {
+          _pendingSubitems.removeWhere((s) => s.id == newSubitem.id);
+          if (_newlyAddedSubitemId == newSubitem.id) {
+            _newlyAddedSubitemId = null;
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add item: $e')),
+        );
+      }
+    }
   }
 
   void _deleteSubitem(String subitemId) {
@@ -112,6 +143,24 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
 
         if (!_isEditing) {
           _titleController.text = list.title;
+        }
+
+        // Merge server subitems with any optimistic pending ones
+        final Set<String> serverIds = list.subitems.map((s) => s.id).toSet();
+        final List<Subitem> visibleSubitems = [
+          ...list.subitems,
+          ..._pendingSubitems.where((s) => !serverIds.contains(s.id)),
+        ];
+
+        // Prune pending items that have arrived from server
+        final hasPendingToPrune = _pendingSubitems.any((s) => serverIds.contains(s.id));
+        if (hasPendingToPrune) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            setState(() {
+              _pendingSubitems.removeWhere((s) => serverIds.contains(s.id));
+            });
+          });
         }
 
         final child = Scaffold(
@@ -224,11 +273,11 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                   }
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  PopupMenuItem<String>(
+                  PopupMenuItem 3cString 3e(
                     value: 'scan_more',
                     child: Row(
                       children: [
-                        Icon(Icons.camera_alt_outlined),
+                        Icon(Icons.camera_alt),
                         SizedBox(width: 8),
                         Text('Scan More Items'),
                       ],
@@ -305,16 +354,31 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
           ),
           
           body: ListView(
+            controller: _scrollController,
             padding: const EdgeInsets.only(bottom: 160.0), // Added padding to prevent FAB overlap
             children: [
-              ...list.subitems.map((subitem) {
-                bool isNew = subitem.id == _newlyAddedSubitemId;
+              ...visibleSubitems.map((subitem) {
+                final bool isNew = subitem.id == _newlyAddedSubitemId;
                 return SubtaskItem(
                   key: ValueKey(subitem.id),
                   subitem: subitem,
                   listId: list.id,
                   startInEditMode: isNew,
                   onDelete: () => _deleteSubitem(subitem.id),
+                  onLocalTitleChanged: (newTitle) {
+                    // Update pending model immediately for not-yet-synced items
+                    final idx = _pendingSubitems.indexWhere((s) => s.id == subitem.id);
+                    if (idx != -1) {
+                      setState(() {
+                        _pendingSubitems[idx] = Subitem(
+                          id: _pendingSubitems[idx].id,
+                          title: newTitle,
+                          completed: _pendingSubitems[idx].completed,
+                          isHeader: _pendingSubitems[idx].isHeader,
+                        );
+                      });
+                    }
+                  },
                   onSubmitted: () {
                     if (isNew) {
                       _addNewSubitem();

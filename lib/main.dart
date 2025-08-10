@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
       home: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
-          child: const AuthGate(),
+          child: AuthGate(),
         ),
       ),
     );
@@ -63,7 +63,9 @@ class MyApp extends StatelessWidget {
 
 /// A widget that handles authentication and routing.
 class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
+  final FirebaseAuth auth;
+
+  AuthGate({super.key, FirebaseAuth? auth}) : auth = auth ?? FirebaseAuth.instance;
 
   @override
   /// Builds the widget.
@@ -81,7 +83,7 @@ class AuthGate extends StatelessWidget {
       page = ShareScreen(shareId: shareId);
     } else {
       page = StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
+        stream: auth.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
@@ -138,7 +140,7 @@ class AuthGate extends StatelessWidget {
                             accessToken: googleAuth.accessToken,
                             idToken: googleAuth.idToken,
                           );
-                          await FirebaseAuth.instance.signInWithCredential(credential);
+                          await auth.signInWithCredential(credential);
                         } catch (e) {
                           print('Failed to sign in with Google: $e');
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -478,7 +480,7 @@ class _ListPageState extends State<ListPage> {
           FloatingActionButton(
             onPressed: _scanAndCreateList,
             heroTag: 'scan',
-            child: const Icon(Icons.camera_alt_outlined),
+            child: const Icon(Icons.camera_alt),
           ),
           const SizedBox(height: 16),
           FloatingActionButton(

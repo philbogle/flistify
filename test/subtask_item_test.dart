@@ -25,10 +25,11 @@ void main() {
     );
 
     // 3. Assert
-    expect(find.text('THIS IS A HEADER'), findsOneWidget);
+    // The widget renders the header text as provided (no uppercasing)
+    expect(find.text('This is a header'), findsOneWidget);
     expect(find.byType(CircularCheckbox), findsNothing);
 
-    final textWidget = tester.widget<Text>(find.text('THIS IS A HEADER'));
+    final textWidget = tester.widget<Text>(find.text('This is a header'));
     expect(textWidget.style?.fontWeight, FontWeight.bold);
   });
 

@@ -39,7 +39,7 @@ class ShareDrawer extends StatelessWidget {
                 Navigator.pop(context); // Close the drawer
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (context) => const AuthGate(),
+                    builder: (context) => AuthGate(),
                   ),
                 );
               },

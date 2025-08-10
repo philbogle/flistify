@@ -15,6 +15,8 @@ class SubtaskItem extends StatefulWidget {
   final bool startInEditMode;
   final VoidCallback? onSubmitted;
   final VoidCallback? onDelete;
+  // Notifies parent to update local pending model when server hasn't caught up yet
+  final ValueChanged<String>? onLocalTitleChanged;
 
   const SubtaskItem({
     super.key,
@@ -22,6 +24,7 @@ class SubtaskItem extends StatefulWidget {
     required this.listId,
     this.onSubmitted,
     this.onDelete,
+    this.onLocalTitleChanged,
     this.startInEditMode = false,
   });
 
@@ -62,7 +65,10 @@ class _SubtaskItemState extends State<SubtaskItem> {
         _updateSubitem();
       }
     });
-    _fetchLinkPreview();
+    // Skip link preview work for headers
+    if (!widget.subitem.isHeader) {
+      _fetchLinkPreview();
+    }
   }
 
   @override
@@ -75,7 +81,9 @@ class _SubtaskItemState extends State<SubtaskItem> {
     super.didUpdateWidget(oldWidget);
     if (widget.subitem.title != oldWidget.subitem.title) {
       _controller.text = widget.subitem.title;
-      _fetchLinkPreview();
+      if (!widget.subitem.isHeader) {
+        _fetchLinkPreview();
+      }
     }
   }
 
@@ -156,6 +164,11 @@ class _SubtaskItemState extends State<SubtaskItem> {
         subitemToUpdate['title'] = _controller.text;
         subtasks[index] = subitemToUpdate;
         transaction.update(listRef, {'subtasks': subtasks});
+      } else {
+        // Not yet on server; update local pending model so UI reflects immediately
+        if (widget.onLocalTitleChanged != null) {
+          widget.onLocalTitleChanged!(_controller.text);
+        }
       }
     });
 
