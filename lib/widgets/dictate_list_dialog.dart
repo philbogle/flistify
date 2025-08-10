@@ -48,7 +48,6 @@ class _DictateListDialogState extends State<DictateListDialog> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final title = data['parentListTitle'] ?? 'Pasted List';
         final newSubitems = (data['extractedSubitems'] as List<dynamic>? ?? [])
             .map((item) => {
                   'id': DateTime.now().millisecondsSinceEpoch.toString() +

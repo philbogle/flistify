@@ -1,13 +1,12 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:listify_mobile/models/list.dart';
-import 'package:listify_mobile/models/subitem.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() {
   test('ListModel should correctly parse subitems with and without isHeader', () {
     // 1. Arrange
-    final listId = 'testList1';
+    const listId = 'testList1';
     final listData = {
       'title': 'My Test List',
       'completed': false,

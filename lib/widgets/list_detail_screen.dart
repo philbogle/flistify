@@ -1,7 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:listify_mobile/models/list.dart';
 import 'package:listify_mobile/models/subitem.dart';
 import 'package:listify_mobile/widgets/subtask_item.dart';
@@ -320,16 +319,17 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                       ],
                     ),
                   ),
-                  PopupMenuItem<String>(
-                    value: 'export_to_google_tasks',
-                    child: Row(
-                      children: [
-                        Icon(Icons.task_outlined),
-                        SizedBox(width: 8),
-                        Text('Export to Google Tasks'),
-                      ],
+                  if (!kIsWeb)
+                    PopupMenuItem<String>(
+                      value: 'export_to_google_tasks',
+                      child: Row(
+                        children: [
+                          Icon(Icons.task_outlined),
+                          SizedBox(width: 8),
+                          Text('Export to Google Tasks'),
+                        ],
+                      ),
                     ),
-                  ),
                   const PopupMenuDivider(),
                   PopupMenuItem<String>(
                     value: 'delete_completed',
@@ -401,7 +401,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                         }
                       },
                     );
-                  }).toList(),
+                  }),
                   Padding(
                     padding: const EdgeInsets.only(left: 16.0, top: 8.0),
                     child: TextButton.icon(
@@ -555,11 +555,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
       );
       return;
     }
-    // Find the rear camera
-    final rearCamera = cameras.firstWhere(
-      (camera) => camera.lensDirection == CameraLensDirection.back,
-      orElse: () => cameras.first, // Fallback to the first camera if no rear camera is found
-    );
 
     final XFile? image = await Navigator.of(context).push(
       MaterialPageRoute(

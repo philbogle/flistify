@@ -142,7 +142,8 @@ class AuthGate extends StatelessWidget {
                           );
                           await auth.signInWithCredential(credential);
                         } catch (e) {
-                          print('Failed to sign in with Google: $e');
+                          debugPrint('Failed to sign in with Google: $e');
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('Failed to sign in with Google: $e'),
@@ -460,7 +461,7 @@ class _ListPageState extends State<ListPage> {
           ),
           if (_isScanning)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               child: const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

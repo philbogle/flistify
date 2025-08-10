@@ -115,7 +115,7 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
                 if (!mounted) return;
                 Navigator.of(context).pop(image);
               } catch (e) {
-                print(e);
+                debugPrint('$e');
               }
             },
             heroTag: 'camera',

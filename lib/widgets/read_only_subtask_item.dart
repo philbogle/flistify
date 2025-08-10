@@ -75,6 +75,7 @@ class _ReadOnlySubtaskItemState extends State<ReadOnlySubtaskItem> {
       setState(() {
         _optimisticCompleted = originalValue;
       });
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Couldn't update item. Please try again."),

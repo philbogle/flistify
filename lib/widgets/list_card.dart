@@ -131,7 +131,7 @@ class _ListCardState extends State<ListCard> with SingleTickerProviderStateMixin
                         child: ReadOnlySubtaskItem(
                             subitem: subitem, listId: widget.list.id),
                       );
-                    }).toList(),
+                    }),
                 const SizedBox(height: 8), // Add some padding at the bottom
               ],
             ),

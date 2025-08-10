@@ -2,34 +2,32 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/tasks/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:listify_mobile/models/list.dart' as app_list;
 import 'package:listify_mobile/models/subitem.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 
 class GoogleTasksService {
   final GoogleSignIn _googleSignIn;
   final FirebaseAuth _auth;
-  final FirebaseFirestore _firestore;
 
   GoogleTasksService()
       : _googleSignIn = GoogleSignIn(scopes: [TasksApi.tasksScope]),
-        _auth = FirebaseAuth.instance,
-        _firestore = FirebaseFirestore.instance;
+        _auth = FirebaseAuth.instance;
 
   Future<TasksApi?> _getTasksApi() async {
     final user = _auth.currentUser;
     if (user == null) {
-      print("User not signed in.");
+      debugPrint("User not signed in.");
       return null;
     }
 
     GoogleSignInAccount? googleUser = await _googleSignIn.signInSilently();
     if (googleUser == null) {
-      print("Google user not signed in silently. Attempting interactive sign-in.");
+      debugPrint("Google user not signed in silently. Attempting interactive sign-in.");
       googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        print("Interactive Google sign-in failed.");
+        debugPrint("Interactive Google sign-in failed.");
         return null;
       }
     }
@@ -56,7 +54,7 @@ class GoogleTasksService {
   Future<void> exportTasks(app_list.ListModel list) async {
     final tasksApi = await _getTasksApi();
     if (tasksApi == null) {
-      print("Failed to get Tasks API client.");
+      debugPrint("Failed to get Tasks API client.");
       return;
     }
 
@@ -72,6 +70,6 @@ class GoogleTasksService {
         await tasksApi.tasks.insert(googleTask, createdTaskList.id!);
       }
     }
-    print("List exported to Google Tasks successfully!");
+    debugPrint("List exported to Google Tasks successfully!");
   }
 }
