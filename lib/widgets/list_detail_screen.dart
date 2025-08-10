@@ -138,7 +138,21 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
           );
         }
 
-        final list = ListModel.fromMap(snapshot.data!.id, snapshot.data!.data() as Map<String, dynamic>);
+        final docSnap = snapshot.data!;
+        // If the document was deleted or has no data, navigate back safely
+        final docData = docSnap.data();
+        if (!docSnap.exists || docData == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final list = ListModel.fromMap(docSnap.id, docData as Map<String, dynamic>);
         final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.black, fontWeight: FontWeight.bold);
 
         if (!_isEditing) {
