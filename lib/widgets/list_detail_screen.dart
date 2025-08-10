@@ -34,6 +34,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   bool _isEditing = false;
   final FocusNode _titleFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
+  bool _isExportingTasks = false;
   String? _newlyAddedSubitemId;
   // Optimistic additions rendered immediately before Firestore roundtrip completes
   final List<Subitem> _pendingSubitems = <Subitem>[];
@@ -239,17 +240,22 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                       );
                       break;
                     case 'export_to_google_tasks':
+                      setState(() { _isExportingTasks = true; });
                       final googleTasksService = GoogleTasksService();
                       try {
                         await googleTasksService.exportTasks(list);
+                        if (!mounted) break;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('List exported to Google Tasks successfully!')),
                         );
                       } catch (e) {
                         debugPrint('Export to Google Tasks error: $e');
+                        if (!mounted) break;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Failed to export to Google Tasks: $e')),
                         );
+                      } finally {
+                        if (mounted) setState(() { _isExportingTasks = false; });
                       }
                       break;
                     case 'delete_completed':
@@ -273,7 +279,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                   }
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  PopupMenuItem 3cString 3e(
+                  PopupMenuItem<String>(
                     value: 'scan_more',
                     child: Row(
                       children: [
@@ -314,8 +320,16 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                       ],
                     ),
                   ),
-                  
-                  
+                  PopupMenuItem<String>(
+                    value: 'export_to_google_tasks',
+                    child: Row(
+                      children: [
+                        Icon(Icons.task_outlined),
+                        SizedBox(width: 8),
+                        Text('Export to Google Tasks'),
+                      ],
+                    ),
+                  ),
                   const PopupMenuDivider(),
                   PopupMenuItem<String>(
                     value: 'delete_completed',
@@ -353,48 +367,69 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
             ],
           ),
           
-          body: ListView(
-            controller: _scrollController,
-            padding: const EdgeInsets.only(bottom: 160.0), // Added padding to prevent FAB overlap
+          body: Stack(
             children: [
-              ...visibleSubitems.map((subitem) {
-                final bool isNew = subitem.id == _newlyAddedSubitemId;
-                return SubtaskItem(
-                  key: ValueKey(subitem.id),
-                  subitem: subitem,
-                  listId: list.id,
-                  startInEditMode: isNew,
-                  onDelete: () => _deleteSubitem(subitem.id),
-                  onLocalTitleChanged: (newTitle) {
-                    // Update pending model immediately for not-yet-synced items
-                    final idx = _pendingSubitems.indexWhere((s) => s.id == subitem.id);
-                    if (idx != -1) {
-                      setState(() {
-                        _pendingSubitems[idx] = Subitem(
-                          id: _pendingSubitems[idx].id,
-                          title: newTitle,
-                          completed: _pendingSubitems[idx].completed,
-                          isHeader: _pendingSubitems[idx].isHeader,
-                        );
-                      });
-                    }
-                  },
-                  onSubmitted: () {
-                    if (isNew) {
-                      _addNewSubitem();
-                    }
-                  },
-                );
-              }).toList(),
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0, top: 8.0),
-                child: TextButton.icon(
-                  onPressed: _addNewSubitem,
-                  onLongPress: () => _addNewSubitem(isHeader: true),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add list item'),
-                ),
+              ListView(
+                controller: _scrollController,
+                padding: const EdgeInsets.only(bottom: 160.0), // Added padding to prevent FAB overlap
+                children: [
+                  ...visibleSubitems.map((subitem) {
+                    final bool isNew = subitem.id == _newlyAddedSubitemId;
+                    return SubtaskItem(
+                      key: ValueKey(subitem.id),
+                      subitem: subitem,
+                      listId: list.id,
+                      startInEditMode: isNew,
+                      onDelete: () => _deleteSubitem(subitem.id),
+                      onLocalTitleChanged: (newTitle) {
+                        // Update pending model immediately for not-yet-synced items
+                        final idx = _pendingSubitems.indexWhere((s) => s.id == subitem.id);
+                        if (idx != -1) {
+                          setState(() {
+                            _pendingSubitems[idx] = Subitem(
+                              id: _pendingSubitems[idx].id,
+                              title: newTitle,
+                              completed: _pendingSubitems[idx].completed,
+                              isHeader: _pendingSubitems[idx].isHeader,
+                            );
+                          });
+                        }
+                      },
+                      onSubmitted: () {
+                        if (isNew) {
+                          _addNewSubitem();
+                        }
+                      },
+                    );
+                  }).toList(),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16.0, top: 8.0),
+                    child: TextButton.icon(
+                      onPressed: _addNewSubitem,
+                      onLongPress: () => _addNewSubitem(isHeader: true),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add list item'),
+                    ),
+                  ),
+                ],
               ),
+              if (_isExportingTasks)
+                Container(
+                  color: Colors.black45,
+                  child: const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 12),
+                        Text(
+                          'Exporting to Google Tasks...',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         );
