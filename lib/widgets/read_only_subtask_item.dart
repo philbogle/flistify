@@ -9,8 +9,9 @@ import 'package:listify_mobile/widgets/list_detail_screen.dart';
 class ReadOnlySubtaskItem extends StatefulWidget {
   final Subitem subitem;
   final String listId;
+  final FirebaseFirestore? firestore;
 
-  const ReadOnlySubtaskItem({super.key, required this.subitem, required this.listId});
+  const ReadOnlySubtaskItem({super.key, required this.subitem, required this.listId, this.firestore});
 
   @override
   State<ReadOnlySubtaskItem> createState() => _ReadOnlySubtaskItemState();
@@ -56,9 +57,10 @@ class _ReadOnlySubtaskItemState extends State<ReadOnlySubtaskItem> {
       _optimisticCompleted = value;
     });
 
-    final listRef = FirebaseFirestore.instance.collection('tasks').doc(widget.listId);
+    final firestore = widget.firestore ?? FirebaseFirestore.instance;
+    final listRef = firestore.collection('tasks').doc(widget.listId);
 
-    FirebaseFirestore.instance.runTransaction((transaction) async {
+    firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(listRef);
       if (!snapshot.exists) return;
 

@@ -17,6 +17,8 @@ class SubtaskItem extends StatefulWidget {
   final VoidCallback? onDelete;
   // Notifies parent to update local pending model when server hasn't caught up yet
   final ValueChanged<String>? onLocalTitleChanged;
+  // Injectable Firestore for tests
+  final FirebaseFirestore? firestore;
 
   const SubtaskItem({
     super.key,
@@ -26,6 +28,7 @@ class SubtaskItem extends StatefulWidget {
     this.onDelete,
     this.onLocalTitleChanged,
     this.startInEditMode = false,
+    this.firestore,
   });
 
   @override
@@ -150,9 +153,10 @@ class _SubtaskItemState extends State<SubtaskItem> {
         return; // No change, no need to update
     }
 
-    final listRef = FirebaseFirestore.instance.collection('tasks').doc(widget.listId);
+    final firestore = widget.firestore ?? FirebaseFirestore.instance;
+    final listRef = firestore.collection('tasks').doc(widget.listId);
 
-    FirebaseFirestore.instance.runTransaction((transaction) async {
+    firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(listRef);
       if (!snapshot.exists) return;
 
@@ -192,8 +196,9 @@ class _SubtaskItemState extends State<SubtaskItem> {
       _optimisticCompleted = value;
     });
 
-    final listRef = FirebaseFirestore.instance.collection('tasks').doc(widget.listId);
-    FirebaseFirestore.instance.runTransaction((transaction) async {
+    final firestore = widget.firestore ?? FirebaseFirestore.instance;
+    final listRef = firestore.collection('tasks').doc(widget.listId);
+    firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(listRef);
       if (!snapshot.exists) return;
       final List<dynamic> subtasks = List<dynamic>.from(snapshot.data()!['subtasks'] ?? []);

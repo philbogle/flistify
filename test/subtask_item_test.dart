@@ -19,7 +19,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: SubtaskItem(subitem: headerSubitem, listId: 'list1'),
+          body: SubtaskItem(subitem: headerSubitem, listId: 'list1', firestore: null),
         ),
       ),
     );
@@ -46,7 +46,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: SubtaskItem(subitem: normalSubitem, listId: 'list1'),
+          body: SubtaskItem(subitem: normalSubitem, listId: 'list1', firestore: null),
         ),
       ),
     );
