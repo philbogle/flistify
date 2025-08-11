@@ -30,7 +30,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   mocktail: ^1.0.3
-  firebase_auth_mocks: ^0.14.2
+  firebase_auth_mocks: ^0.14.1
   fake_cloud_firestore: ^3.0.3
   flutter_launcher_icons: ^0.13.1
   flutterfire_cli: ^1.2.0
