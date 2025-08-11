@@ -34,7 +34,7 @@ Listify can export any list to Google Tasks. This creates a new task list in you
 
 ## Technology
 
-*   **Frontend:** Flutter
+*   **Frontend:** Flutter and Dart
 *   **Backend Services:**
     *   Firebase Authentication (Google Sign-In, Anonymous)
     *   Cloud Firestore (Database)
